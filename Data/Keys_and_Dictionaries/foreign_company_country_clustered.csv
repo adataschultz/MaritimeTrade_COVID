@@ -1,0 +1,250 @@
+Foreign_Company_Country,Name,Code,Continent
+  ,Unknown,Unknown,Unknown
+ B,Unknown,Unknown,Unknown
+ D,Unknown,Unknown,Unknown
+ L,Unknown,Unknown,Unknown
+ N,Unknown,Unknown,Unknown
+. ,Unknown,Unknown,Unknown
+A ,Unknown,Unknown,Unknown
+AE,United Arab Emirates,AE,Asia
+AF,Afghanistan,AF,Asia
+AG,Antigua and Barbuda,AG,North America
+AI,Anguilla,AI,North America
+AL,Albania,AL,Europe
+AM,Armenia,AM,Asia
+AN,Unknown,Unknown,Unknown
+AO,Angola,AO,Africa
+AR,Argentina,AR,South America
+AS,American Samoa,AS,Oceania
+AT,Austria,AT,Europe
+AU,Australia,AU,Oceania
+AW,Aruba,AW,North America
+AZ,Azerbaijan,AZ,Asia
+BA,Bosnia and Herzegovina,BA,Europe
+BB,Barbados,BB,North America
+BD,Bangladesh,BD,Asia
+BE,Belgium,BE,Europe
+BF,Burkina Faso,BF,Africa
+BG,Bulgaria,BG,Europe
+BH,Bahrain,BH,Asia
+BI,Burundi,BI,Africa
+BJ,Benin,BJ,Africa
+BM,Bermuda,BM,North America
+BN,Brunei Darussalam,BN,Asia
+BO,"Bolivia, Plurinational State of",BO,South America
+BR,Brazil,BR,South America
+BS,Bahamas,BS,North America
+BT,Bhutan,BT,Asia
+BW,Botswana,BW,Africa
+BY,Belarus,BY,Europe
+BZ,Belize,BZ,North America
+C ,Unknown,Unknown,Unknown
+CA,Canada,CA,North America
+CB,Unknown,Unknown,Unknown
+CD,"Congo, the Democratic Republic of the",CD,Africa
+CG,Congo,CG,Africa
+CH,Switzerland,CH,Europe
+CI,Cote d'Ivoire,CI,Africa
+CK,Cook Islands,CK,Oceania
+CL,Chile,CL,South America
+CM,Cameroon,CM,Africa
+CN,China,CN,Asia
+CO,Colombia,CO,South America
+CR,Costa Rica,CR,North America
+CU,Cuba,CU,North America
+CV,Cape Verde,CV,Africa
+CX,Christmas Island,CX,Asia
+CY,Cyprus,CY,Europe
+CZ,Czech Republic,CZ,Europe
+D ,Unknown,Unknown,Unknown
+DE,Germany,DE,Europe
+DJ,Djibouti,DJ,Africa
+DK,Denmark,DK,Europe
+DM,Dominica,DM,North America
+DO,Dominican Republic,DO,North America
+DZ,Algeria,DZ,Africa
+E ,Unknown,Unknown,Unknown
+EC,Ecuador,EC,South America
+EE,Estonia,EE,Europe
+EG,Egypt,EG,Africa
+ER,Eritrea,ER,Africa
+ES,Spain,ES,Europe
+ET,Ethiopia,ET,Africa
+F ,Unknown,Unknown,Unknown
+FI,Finland,FI,Europe
+FJ,Fiji,FJ,Oceania
+FK,Falkland Islands (Malvinas),FK,South America
+FM,"Micronesia, Federated States of",FM,Oceania
+FO,Faroe Islands,FO,Europe
+FR,France,FR,Europe
+G ,Unknown,Unknown,Unknown
+GA,Gabon,GA,Africa
+GB,United Kingdom,GB,Europe
+GD,Grenada,GD,North America
+GE,Georgia,GE,Asia
+GF,French Guiana,GF,South America
+GH,Ghana,GH,Africa
+GI,Gibraltar,GI,Europe
+GL,Greenland,GL,North America
+GM,Gambia,GM,Africa
+GN,Guinea,GN,Africa
+GP,Guadeloupe,GP,North America
+GQ,Equatorial Guinea,GQ,Africa
+GR,Greece,GR,Europe
+GT,Guatemala,GT,North America
+GU,Guam,GU,Oceania
+GW,Guinea-Bissau,GW,Africa
+GY,Guyana,GY,South America
+H ,Unknown,Unknown,Unknown
+HK,Hong Kong,HK,Asia
+HN,Honduras,HN,North America
+HR,Croatia,HR,Europe
+HT,Haiti,HT,North America
+HU,Hungary,HU,Europe
+I ,Unknown,Unknown,Unknown
+ID,Indonesia,ID,Asia
+IE,Ireland,IE,Europe
+IL,Israel,IL,Asia
+IN,India,IN,Asia
+IO,British Indian Ocean Territory,IO,Asia
+IQ,Iraq,IQ,Asia
+IR,"Iran, Islamic Republic of",IR,Asia
+IS,Iceland,IS,Europe
+IT,Italy,IT,Europe
+JM,Jamaica,JM,North America
+JO,Jordan,JO,Asia
+JP,Japan,JP,Asia
+K ,Unknown,Unknown,Unknown
+KE,Kenya,KE,Africa
+KG,Kyrgyzstan,KG,Asia
+KH,Cambodia,KH,Asia
+KI,Kiribati,KI,Oceania
+KM,Comoros,KM,Africa
+KN,Saint Kitts and Nevis,KN,North America
+KP,North Korea,KP,Asia
+KR,South Korea,KR,Asia
+KW,Kuwait,KW,Asia
+KY,Cayman Islands,KY,North America
+KZ,Kazakhstan,KZ,Asia
+L ,Unknown,Unknown,Unknown
+LA,Laos,LA,Asia
+LB,Lebanon,LB,Asia
+LC,Saint Lucia,LC,North America
+LI,Liechtenstein,LI,Europe
+LK,Sri Lanka,LK,Asia
+LR,Liberia,LR,Africa
+LS,Lesotho,LS,Africa
+LT,Lithuania,LT,Europe
+LU,Luxembourg,LU,Europe
+LV,Latvia,LV,Europe
+LY,Libya,LY,Africa
+MA,Morocco,MA,Africa
+MC,Monaco,MC,Europe
+MD,"Moldova, Republic of",MD,Europe
+ME,Montenegro,ME,Europe
+MG,Madagascar,MG,Africa
+MH,Marshall Islands,MH,Oceania
+MK,"Macedonia, the Former Yugoslav Republic of",MK,Europe
+ML,Mali,ML,Africa
+MM,Myanmar,MM,Asia
+MN,Mongolia,MN,Asia
+MO,Macau,MO,Asia
+MP,Northern Mariana Islands,MP,Oceania
+MQ,Martinique,MQ,North America
+MR,Mauritania,MR,Africa
+MT,Malta,MT,Europe
+MU,Mauritius,MU,Africa
+MV,Maldives,MV,Asia
+MW,Malawi,MW,Africa
+MX,Mexico,MX,North America
+MY,Malaysia,MY,Asia
+MZ,Mozambique,MZ,Africa
+N ,Unknown,Unknown,Unknown
+NC,New Caledonia,NC,Oceania
+NE,Niger,NE,Africa
+NG,Nigeria,NG,Africa
+NI,Nicaragua,NI,North America
+NL,Netherlands,NL,Europe
+NO,Norway,NO,Europe
+Not Provided,Unknown,Unknown,Unknown
+NP,Nepal,NP,Asia
+NZ,New Zealand,NZ,Oceania
+O ,Unknown,Unknown,Unknown
+OM,Oman,OM,Asia
+P ,Unknown,Unknown,Unknown
+PA,Panama,PA,North America
+PC,Unknown,Unknown,Unknown
+PE,Peru,PE,South America
+PF,French Polynesia,PF,Oceania
+PG,Papua New Guinea,PG,Oceania
+PH,Philippines,PH,Asia
+PK,Pakistan,PK,Asia
+PL,Poland,PL,Europe
+PN,Pitcairn,PN,Oceania
+PR,Puerto Rico,PR,North America
+PS,"Palestine, State of",PS,Asia
+PT,Portugal,PT,Europe
+PW,Palau,PW,Oceania
+PY,Paraguay,PY,South America
+QA,Qatar,QA,Asia
+R ,Unknown,Unknown,Unknown
+RE,Reunion,RE,Africa
+RO,Romania,RO,Europe
+RS,Serbia,RS,Europe
+RU,Russian Federation,RU,Asia
+RW,Rwanda,RW,Africa
+S ,Unknown,Unknown,Unknown
+SA,Saudi Arabia,SA,Asia
+SB,Solomon Islands,SB,Oceania
+SC,Seychelles,SC,Africa
+SD,Sudan,SD,Africa
+SE,Sweden,SE,Europe
+SG,Singapore,SG,Asia
+SH,"Saint Helena, Ascension and Tristan da Cunha",SH,Africa
+SI,Slovenia,SI,Europe
+SK,Slovakia,SK,Europe
+SL,Sierra Leone,SL,Africa
+SM,San Marino,SM,Europe
+SN,Senegal,SN,Africa
+SO,Somalia,SO,Africa
+SR,Suriname,SR,South America
+SV,El Salvador,SV,North America
+SY,Syrian Arab Republic,SY,Asia
+SZ,Swaziland,SZ,Africa
+T ,Unknown,Unknown,Unknown
+TC,Turks and Caicos Islands,TC,North America
+TD,Chad,TD,Africa
+TG,Togo,TG,Africa
+TH,Thailand,TH,Asia
+TJ,Tajikistan,TJ,Asia
+TL,Timor-Leste,TL,Asia
+TM,Turkmenistan,TM,Asia
+TN,Tunisia,TN,Africa
+TO,Tonga,TO,Oceania
+TR,Turkey,TR,Asia
+ts,Unknown,Unknown,Unknown
+TT,Trinidad and Tobago,TT,North America
+TV,Tuvalu,TV,Oceania
+TW,"Taiwan, Province of China",TW,Asia
+TZ,"Tanzania, United Republic of",TZ,Africa
+U ,Unknown,Unknown,Unknown
+UA,Ukraine,UA,Europe
+UG,Uganda,UG,Africa
+US,United States,US,North America
+UY,Uruguay,UY,South America
+UZ,Uzbekistan,UZ,Asia
+VC,Saint Vincent and the Grenadines,VC,North America
+VE,"Venezuela, Bolivarian Republic of",VE,South America
+VG,"Virgin Islands, British",VG,North America
+VI,"Virgin Islands, U.S.",VI,North America
+VN,Viet Nam,VN,Asia
+VU,Vanuatu,VU,Oceania
+WS,Samoa,WS,Oceania
+XX,Unknown,Unknown,Unknown
+Y ,Unknown,Unknown,Unknown
+YE,Yemen,YE,Asia
+Z ,Unknown,Unknown,Unknown
+ZA,South Africa,ZA,Africa
+ZM,Zambia,ZM,Africa
+ZW,Zimbabwe,ZW,Africa
+ZZ,Unknown,Unknown,Unknown

@@ -1,0 +1,24 @@
+HS_Class,Description,HS_Group_Name
+2,Meat and edible meat offal,Edible
+7,Edible vegetables and certain roots and tubers,Edible
+8,Edible fruit and nuts; peel of citrus fruit or melons,Edible
+9,"Coffee, tea, maté and spices",Edible with Processing
+10,Cereals,Edible with Processing
+11,Products of the milling industry; malt; starches; inulin; wheat gluten,Edible with Processing
+14,Vegetable plaiting materials; vegetable products not elsewhere specified or included,Edible with Processing
+15,Animal or vegetable fats and oils and their cleavage products prepared edible fats; animal or vegetable waxes,Edible with Processing
+16,"Preparations of meat, of fish or of crustaceans, molluscs or other aquatic invertebrates",Edible with Processing
+17,Sugars and sugar confectionery,Edible with Processing
+18,Cocoa and cocoa preparations,Edible with Processing
+19,"Preparations of cereals, flour, starch or milk; bakers' wares",Edible with Processing
+20,"Preparations of vegetables, fruit, nuts or other parts of plants",Edible with Processing
+22,"Beverages, spirits and vinegar",Vices
+24,Tobacco and manufactured tobacco substitutes,Vices
+30,Pharmaceutical products,Pharma
+40,Rubber and articles thereof,Raw Input
+47,Pulp of wood or of other fibrous cellulosic material; waste and scrap of paper or paperboard,Raw Input
+72,Iron and steel,Raw Input
+73,Articles of iron or steel,Finished Goods
+87,"Vehicles other than railway or tramway rolling stock, and parts and accessories thereof",Finished Goods
+94,"Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; lamps and lighting fittings, not elsewhere specified or included; illuminated sign illuminated nameplates and the like; prefabricated buildings",Finished Goods
+95,"Toys, games and sports requisites; parts and accessories thereof",Finished Goods
