@@ -8,7 +8,7 @@ Dimensions of Imports: (38049723, 16)
 Dimensions of Exports: (24377605, 15)
 ======================================
 
-Dimensions of Concatenated Imports & Exports: (62279097, 17)
+Dimensions of Concatenated Imports & Exports with all HS_Class: (62279097, 17)
 ======================================
 
 Number of Unique : HS_Class    23
