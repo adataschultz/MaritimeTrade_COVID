@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 @author: aschu
@@ -58,13 +57,15 @@ df = pd.read_csv('combined_trade_final_LSTM.csv', low_memory = False)
 df = df.drop_duplicates()
 
 # Drop time and COVID-19 vars
-df = df.drop(['State', 'DateTime', 'Date_Weekly_COVID', 'DateTime_YearWeek'],
-             axis=1)
+df = df.drop(['State', 'DateTime', 'Date_Weekly_COVID'], axis=1)
 
 # Convert dtypes
 df = df.copy()
 df['State_Closure_EA_Diff'] = df['State_Closure_EA_Diff'].astype('float64')
 df['Container_Type_Dry'] = df['Container_Type_Dry'].astype('object')
+
+# Filter missing data
+df = df[df.Foreign_Country_Region.notna() & df.Average_Tariff.notna()]
 
 # Filter df to 2019
 df1 = df[df['Year'] == 2019]
@@ -102,7 +103,6 @@ X_train = pd.get_dummies(X_train, drop_first=True)
 
 # Test: Create dummy variables for categorical variables
 X_test = pd.get_dummies(X_test, drop_first=True)
-X_train.columns
 
 # MinMax Scaling
 mn = MinMaxScaler()
@@ -167,8 +167,8 @@ def objective(params, n_folds = N_FOLDS):
             'status': STATUS_OK}
 
 ###############################################################################
-############################# light GBM HPO  ##################################
-############################# GBDT, DART, GOSS  ###############################
+############################# light GBM HPO ###################################
+############################# GBDT, DART, GOSS ################################
 ###############################################################################
 # Define the parameter grid
 param_grid = {
@@ -390,10 +390,24 @@ webbrowser.open(url2, new=2)
 #explanation_pred
 
 ###############################################################################
-# Test trained model on 2019 on 2020
+##################### Test trained model on 2019 on 2020 ######################
+###############################################################################
 # Prepare 2020 to fit model train on 2019
 X_test1 = df2.drop(['Metric_Tons'],axis=1)
 y_test1 = df2['Metric_Tons']
+
+# Drop year variable
+X_test1 = X_test1.drop(['DateTime_YearWeek'], axis=1)
+
+# Testing set: Encode variables using ranking - ordinal               
+ce_ord = ce.OrdinalEncoder(cols = ['foreign_company_size', 'US_company_size'])
+X_test1 = ce_ord.fit_transform(X_test1)
+
+# Test: Create dummy variables for categorical variables
+X_test1 = pd.get_dummies(X_test1, drop_first=True)
+
+# MinMax Scaling
+X_test1 = pd.DataFrame(mn.fit_transform(X_test1), columns = X_test1.columns)
 
 # Model Metrics
 y_test_pred = best_bayes_model.predict(X_test1)
@@ -470,7 +484,7 @@ np.random.seed(seed_value)
 
 # Prepare 2020 for partitioning data
 X = df2.drop(['Metric_Tons'],axis=1)
-y = df2'Metric_Tons']
+y = df2['Metric_Tons']
 
 # Set up train/test split with stratified by 'DateTime_YearWeek'
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3,
@@ -705,10 +719,24 @@ webbrowser.open(url2, new=2)
 #explanation_pred
 
 ###############################################################################
-# Test trained model on 2020 on 2019
+##################### Test trained model on 2020 on 2019 ######################
+###############################################################################
 # Prepare 2019 to fit model train on 2020
 X_test1 = df1.drop(['Metric_Tons'], axis=1)
 y_test1 = df1['Metric_Tons']
+
+# Drop year variable
+X_test1 = X_test1.drop(['DateTime_YearWeek'], axis=1)
+
+# Testing set: Encode variables using ranking - ordinal               
+ce_ord = ce.OrdinalEncoder(cols = ['foreign_company_size', 'US_company_size'])
+X_test1 = ce_ord.fit_transform(X_test1)
+
+# Test: Create dummy variables for categorical variables
+X_test1 = pd.get_dummies(X_test1, drop_first=True)
+
+# MinMax Scaling
+X_test1 = pd.DataFrame(mn.fit_transform(X_test1), columns = X_test1.columns)
 
 # Model Metrics
 y_test_pred = best_bayes_model.predict(X_test1)

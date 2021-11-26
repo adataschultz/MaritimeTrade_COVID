@@ -1098,7 +1098,7 @@ print('======================================')
 sys.stdout.close()
 sys.stdout=stdoutOrigin
 
-#W rite processed data to csv
+# Write processed data to csv
 df.to_csv('combined_trade.csv', index=False, encoding='utf-8-sig')
 ##############################################################################
 # Now perform EDA for variable selection
