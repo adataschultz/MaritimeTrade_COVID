@@ -3,21 +3,30 @@
 @author: aschu
 """
 import os
+import random
+import numpy as np
 import sys
 import glob
 import pandas as pd
-import numpy as np
 import seaborn as sns
 import datapackage
 import matplotlib.pyplot as plt
 
-#Write results to log file
+pd.set_option('display.max_columns', None)
+
+# Set seed
+seed_value = 42
+os.environ['MaritimeTrade_Preprocessing'] = str(seed_value)
+random.seed(seed_value)
+np.random.seed(seed_value)
+
+# Write results to log file
 stdoutOrigin=sys.stdout 
-sys.stdout = open("MaritimeTrade_preprocess_log.txt", "w")
+sys.stdout = open('MaritimeTrade_preprocess_log.txt', 'w')
 
 print('\nMaritime Trade Preprocess into Data Warehouse') 
-print("================================================")
-##############################################################################
+print('======================================================================')
+
 # Concat all files in directory
 # Imports
 path = r'D:\Maritime Trade\Data\Imports'
@@ -45,7 +54,7 @@ imports.rename(columns={'Consignee (Unified)':'US_Company',
                         'VIN Quantity':'VIN_Quantity'}, inplace=True)
 
 print('\nDimensions of Imports:', imports.shape) ##38049723, 16)
-print('======================================')
+print('======================================================================')
 
 ##############################################################################
 # Exports
@@ -69,8 +78,8 @@ exports.rename(columns={'Exporter (Unified)':'US_Company',
                         'Metric Tons':'Metric_Tons', 
                         'VIN Quantity':'VIN_Quantity'}, inplace=True)
 
-print('\nDimensions of Exports:': exports.shape) #(24377605, 16)
-print('======================================')
+print('\nDimensions of Exports:', exports.shape) #(24377605, 16)
+print('======================================================================')
 
 ##############################################################################
 ##############################################################################
@@ -171,7 +180,7 @@ del df
 # Concatenate Imports and Exports
 df = pd.concat([imports, exports])
 print('\nDimensions of Concatenated Imports & Exports:', df.shape) #(62279097, 16))
-print('======================================')
+print('======================================================================')
 
 # Remove data not needed
 del imports, exports
@@ -186,7 +195,7 @@ df['Container_Type_Dry'] = df['Container_Type_Dry'].astype('str')
 df['Container_Type_Dry'] = df['Container_Type_Dry'].replace('0','False')
 df['Container_Type_Dry'] = df['Container_Type_Dry'].replace('1','True')
 
-########################################################
+###############################################################################
 # =============================================================================
 # Preprocess Concatenated Imports/Exports Data
 # 
@@ -225,7 +234,7 @@ list = [2,7,8,9,10,11,14,15,16,17,18,19,20,22,24,30,40,47,72,73,87,94,95]
 df = df[df['HS_Class'].isin(list)]
 
 print('\nNumber of Unique :', df[['HS_Class']].nunique()) #23
-print('======================================')
+print('======================================================================')
 
 # Convert HS_Class to string
 df['HS_Class'] = df['HS_Class'].astype('str')
@@ -278,7 +287,7 @@ dat = dat.copy()
 dat['US_Company_State'] = [x.rsplit(",", 1)[-1] for x in dat['US_Company']]
 
 print('\nNumber of Unique :', dat[['US_Company_State']].nunique()) #75
-print('======================================')
+print('======================================================================')
 
 ##############################################################################
 # Concatenate data
@@ -297,7 +306,7 @@ df['US_Company_Agg'] = df['US_Company_Agg'].str[0]
 
 print('\nNumber of Unique of US_Company_Aggregrated is:', 
       df[['US_Company_Agg']].nunique())
-print('======================================')
+print('======================================================================')
 
 ##############################################################################
 # Filter Foreign_Company into different dfs because of missing Foreign_Company
@@ -320,7 +329,7 @@ dat['Foreign_Company_Country'] = [x[-2:] for x in dat['Foreign_Company_Country']
      
 print('\nNumber of Unique of Foreign_Company_Country is:', 
       dat[['Foreign_Company_Country']].nunique()) 
-print('======================================')
+print('======================================================================')
 
 #Concat data with foreign company present and missing
 df = pd.concat([dat, dat2])
@@ -334,25 +343,25 @@ path = r'D:\Maritime Trade\OpenRefine_ClusteringNames'
 os.chdir(path)
 
 #the columns we want distinct values from
-us_companies = pd.DataFrame({'US_Company':df['US_Company'].unique()})
+us_companies = pd.DataFrame({'US_Company': df['US_Company'].unique()})
 us_companies.to_csv('us_companies.csv', index=False, encoding='utf-8-sig')
 
-foreign_country = pd.DataFrame({'Foreign_Country':df['Foreign_Country'].unique()})
+foreign_country = pd.DataFrame({'Foreign_Country': df['Foreign_Country'].unique()})
 foreign_country.to_csv('foreign_country.csv', index=False, encoding='utf-8-sig')
 
-foreign_port = pd.DataFrame({'Foreign_Port':df['Foreign_Port'].unique()})
+foreign_port = pd.DataFrame({'Foreign_Port': df['Foreign_Port'].unique()})
 foreign_port.to_csv('foreign_port.csv', index=False, encoding='utf-8-sig')
 
-US_port = pd.DataFrame({'US_Port':df['US_Port'].unique()})
+US_port = pd.DataFrame({'US_Port': df['US_Port'].unique()})
 US_port.to_csv('us_port.csv', index=False, encoding='utf-8-sig')
 
-carrier = pd.DataFrame({'Carrier':df['Carrier'].unique()})
+carrier = pd.DataFrame({'Carrier': df['Carrier'].unique()})
 carrier.to_csv('carrier.csv', index=False, encoding='utf-8-sig')
 
-foreign_company = pd.DataFrame({'Foreign_Company':df['Foreign_Company'].unique()})
+foreign_company = pd.DataFrame({'Foreign_Company': df['Foreign_Company'].unique()})
 foreign_company.to_csv('foreign_company.csv', index=False, encoding='utf-8-sig')
 
-foreign_company_country = pd.DataFrame({'Foreign_Company_Country':df['Foreign_Company_Country'].unique()})
+foreign_company_country = pd.DataFrame({'Foreign_Company_Country': df['Foreign_Company_Country'].unique()})
 foreign_company_country.to_csv('foreign_company_country.csv', index=False, encoding='utf-8-sig')
 
 ##############################################################################
@@ -371,13 +380,9 @@ for resource in resources:
         
 data.to_csv('country_map.csv', index=False, encoding='utf-8-sig')
 
-##############################################################################
-##############################################################################
-# =============================================================================
-# Perform clustering using OpenRefine
-# ##############################################################################
-# =============================================================================
-##############################################################################
+###############################################################################
+###################### Perform clustering using OpenRefine ####################
+###############################################################################
 # Merge data with the clustered names generated by OpenRefine
 path = r'D:\Maritime Trade\Data\Keys_and_Dictionaries'
 os.chdir(path)
@@ -385,7 +390,7 @@ os.chdir(path)
 # Merge us_companies_clustered
 us_company_clustered = pd.read_csv('us_companies_clustered.csv')
 
-df = pd.merge(df,us_company_clustered, left_on='US_Company', 
+df = pd.merge(df, us_company_clustered, left_on='US_Company', 
               right_on='US_Company')
 df = df.drop(['US_Company'], axis=1)
 df = df.drop_duplicates()
@@ -393,7 +398,7 @@ df = df.drop_duplicates()
 # Merge foreign_company_clustered
 foreign_company_clustered = pd.read_csv('foreign_company_clustered.csv')
 
-df = pd.merge(df,foreign_company_clustered, left_on='Foreign_Company', 
+df = pd.merge(df, foreign_company_clustered, left_on='Foreign_Company', 
               right_on='Foreign_Company')
 df = df.drop(['Foreign_Company'], axis=1)
 df = df.drop_duplicates()
@@ -409,7 +414,7 @@ df = df.drop_duplicates()
 # Merge us_port_and_state_code_clustered_binned
 us_port_and_state_code_clustered_binned = pd.read_csv('us_port_and_state_code_clustered_binned.csv')
 
-df = pd.merge(df,us_port_and_state_code_clustered_binned, 
+df = pd.merge(df, us_port_and_state_code_clustered_binned, 
               left_on='US_Port',right_on='US_Port')
 df = df.drop_duplicates()
 df.rename(columns={'STATE_CODE':'US_Company_State'}, inplace=True)
@@ -485,7 +490,7 @@ df1 = df1.groupby('US_company_Clustered')['Metric_Tons'].sum().reset_index()
 
 df1 = df1.loc[df1['Metric_Tons'] > 100]
 print('\nDimensions of US Company with Metric Tons over 100:', df1.shape) 
-print('======================================')
+print('======================================================================')
 
 # Rename total metric tons for US companies
 df1.rename(columns = {'Metric_Tons': 'Metric_Tons_Totals'}, inplace=True)
@@ -552,7 +557,7 @@ df1 = df1.groupby('Foreign_Company_Clustered')['Metric_Tons'].sum().reset_index(
 
 df1 = df1.loc[df1['Metric_Tons'] > 100]
 print('\nDimensions of Foreign Company with Metric Tons over 100:', df1.shape) 
-print('======================================')
+print('======================================================================')
 
 # Rename total metric tons for foreign companies
 df1.rename(columns = {'Metric_Tons': 'Metric_Tons_Totals'}, inplace=True)
@@ -605,13 +610,7 @@ df['US_Port_State'] = df['US_Port_State'].replace(['NEW YORK',' NY',' FL',
                                                                   'NM', 'PA', 
                                                                   'VI', 'CO',
                                                                   'NE','CA'])
-# =============================================================================
-# df['US_Port_State'] = df['US_Port_State'].replace(['NEW YORK',' NY',' FL',' TX','OH (DHL COURIER)',' VA',
-#        ' NJ', ' UT',' HI', ' MD', ' DC', ' AK',' WA', ' VI',' MI',' MT', ' FL)',
-#        ' ND', ' NM', ' PA', 'VIRGIN ISLANDS', ' CO', ' NE', ' CA'],['NY', 'NY', 'FL', 'TX', 'OH', 'VA', 'NJ', 'UT',
-#                                                                     'HI', 'MD', 'DC', 'AK', 'WA', 'VI', 'MI', 'MI', 'FL',
-#                                                                     'ND', 'NM', 'PA', 'VI', 'CO','NE','CA'])
-# =============================================================================
+
 ##############################################################################
 # Errors with WI, MS)
 df['US_Port_State'].mask(df['US_Port_State'] == ' WI', 'WI', inplace=True)
@@ -651,30 +650,30 @@ df['US_Company_State'].mask(df['US_Company_State'] == 'ED', 'NOT DECLARED',
 df = df[((df.Metric_Tons - df.Metric_Tons.mean()) / 
          df.Metric_Tons.std()).abs() < 3.5]
 print('\nDimensions after removing outliers in Metric Tons:', df.shape) 
-print('================================================================')
+print('======================================================================')
 
-sns.boxplot(x=df['Metric_Tons']).set_title("Distribution of Metric Tons")
-plt.savefig("Distribution_Metric_Tons_Afteroutliertesting.png", 
-            bbox_inches="tight")
+sns.boxplot(x=df['Metric_Tons']).set_title('Distribution of Metric Tons')
+plt.savefig('Distribution_Metric_Tons_Afteroutliertesting.png', 
+            bbox_inches='tight')
 
 # Retain data that is in long right tail
 df = df.loc[df['Metric_Tons'] < 250]
 print('\nDimensions after removing data in right tail of Metric Tons:', 
       df.shape) 
-print('================================================================')
+print('======================================================================')
 
-sns.boxplot(x=df1['Metric_Tons']).set_title("Distribution of Metric Tons")
-plt.savefig("Distribution_Metric_Tons_Afterrighttail.png", bbox_inches="tight")
+sns.boxplot(x=df['Metric_Tons']).set_title('Distribution of Metric Tons')
+plt.savefig('Distribution_Metric_Tons_Afterrighttail.png', bbox_inches='tight')
 
 ##############################################################################
 # Teus
 # To filter the DataFrame where Teus is within three standard deviations
 df = df[((df.Teus - df.Teus.mean()) / df.Teus.std()).abs() < 3.5]
 print('\nDimensions after removing outliers in Teus:', df.shape) 
-print('================================================================')
+print('======================================================================')
 
-sns.boxplot(x=df['Teus']).set_title("Distribution of Teus")
-plt.savefig("Distribution_Teus_Afteroutliertesting.png", bbox_inches="tight")
+sns.boxplot(x=df['Teus']).set_title('Distribution of Teus')
+plt.savefig('Distribution_Teus_Afteroutliertesting.png', bbox_inches='tight')
 
 ##############################################################################
 # Total calculated value (US$): rename to TCVUSD
@@ -683,13 +682,13 @@ df = df.rename(columns = {"Total calculated value (US$)": "TCVUSD"},
                inplace = True) 
 df = df[((df['TCVUSD'] - df['TCVUSD'].mean()) / df['TCVUSD'].std()).abs() < 3.5]
 print('\nDimensions after removing outliers in TCVUSD:', df.shape) 
-print('================================================================')
+print('======================================================================')
 
-sns.boxplot(x=df['TCVUSD']).set_title("Distribution of Total calculated value (US$)")
-plt.savefig("Distribution_TCVUSD_Afteroutliertesting.png", bbox_inches="tight")
+sns.boxplot(x=df['TCVUSD']).set_title('Distribution of Total calculated value (US$)')
+plt.savefig('Distribution_TCVUSD_Afteroutliertesting.png', bbox_inches='tight')
 
 df = df.drop_duplicates()
-data = df
+
 ##############################################################################
 ##############################################################################
 ##############################################################################
@@ -704,6 +703,7 @@ data = df
 # =============================================================================
 path = r'D:\Maritime Trade\Data\Keys_and_Dictionaries'
 os.chdir(path)
+
 country_continent_region_key = pd.read_csv('country_continent_region_key.csv', 
                                            sep=',', index_col=False)
 
@@ -719,6 +719,7 @@ del country_continent_region_key
 # Joining unemployment table to trade dataset
 path = r'D:\Maritime Trade\Data\Warehouse_Construction'
 os.chdir(path)
+
 unemployment = pd.read_csv('Unemployment Data 2010-2020.csv', sep=',', 
                            index_col=False)
 unemployment['Year-Month'] = pd.to_datetime(unemployment['Year-Month'].astype(
@@ -733,7 +734,7 @@ df = df.drop_duplicates()
 
 # Rename the Unemployment Rate Total to specify unemployment rate in "US".
 df = df.copy()
-df.rename(columns={"Unemployment Rate Total": "US_Unemployment_Rate"}, 
+df.rename(columns={'Unemployment Rate Total': 'US_Unemployment_Rate'}, 
                inplace=True)
 
 # Remove data not needed
@@ -781,11 +782,15 @@ df = df.drop(['Month_Year','Country','European_Union_Member',
               'Foreign_Country_Name_Clustered'],axis=1)
 df = df.drop_duplicates()
 
+# Remove data not needed
+del currencies
+
 ##############################################################################
 # Prepare to merge data with KFF state closure data
 # The full state names exist in the COVID-19 counts and KFF-stay-at-home-order datasets
 path = r'D:\Maritime Trade\Data\Keys_and_Dictionaries'
 os.chdir(path)
+
 state_abbreviation_key = pd.read_csv('State, Abbrev, Region key.csv', 
                                      sep=',', index_col=False)
 state_abbreviation_key.rename(columns={'Region': 'State_Region'}, inplace=True)
@@ -801,6 +806,7 @@ df = df.drop_duplicates()
 # Not an ideal merge, because variable is only relevant in 2020 
 path = r'D:\Maritime Trade\Data\Warehouse_Construction'
 os.chdir(path)
+
 KFF_Statewide_Stay_at_Home_Orders = pd.read_csv('KFF_Statewide-Stay-at-Home-Orders.csv', 
                                                 sep=',', index_col=False)
 
@@ -809,6 +815,9 @@ df = pd.merge(df, KFF_Statewide_Stay_at_Home_Orders, how='right',
 df = df.drop_duplicates()
 df.rename(columns={'Date Announced': 'Date_Announced', 
                   'Effective Date': 'Effective_Date'}, inplace=True)
+
+# Remove data not needed
+del KFF_Statewide_Stay_at_Home_Orders
 
 ##############################################################################
 # Merge COVID Weekly Data
@@ -846,20 +855,19 @@ df = df.copy()
 df['DateTime'] = pd.to_datetime(df['Date'].astype(int), format='%Y%m%d')
 df['Year'] = df.DateTime.dt.year
 df['DateTime_YearWeek'] = df['DateTime'].dt.strftime('%Y-w%U')
-df = df.drop(["Date"], axis=1)
+df = df.drop(['Date'], axis=1)
 
 # Outer merge of main data with aggregrated weekly COVID-19 cases and deaths in US States
-df = pd.merge(df, df1, how='outer', left_on=['State','DateTime_YearWeek'], 
+df = pd.merge(df, df1, how='outer', left_on=['State', 'DateTime_YearWeek'], 
               right_on=['US_Port_State','DateTime_YearWeek'])
-df = df.drop(['Foreign_Country_Code', 'Name', 'Country Code',
-       'Continent'], axis=1)
+df = df.drop(['Foreign_Country_Code', 'Name', 'Country Code', 
+              'Continent'], axis=1)
 df = df.drop_duplicates()
 print('\nDimensions after merging to a data warehouse:', df.shape) 
-print('================================================================')
-
+print('======================================================================')
 
 # Remove data not needed
-del COVID_cases, df1
+del state_abbreviation_key, COVID_cases, df1
 
 ##############################################################################
 # Outer merge resulted in time points where there were not trade in specific states so fill gaps with data
@@ -873,7 +881,7 @@ df1['deaths_weekly'] = df1['deaths_weekly'].fillna(0)
 ##############################################################################
 df2 = df[df['HS_Mixed'].isna()]
 print('\nNumber of observations where no trade occurred :', df2.shape) 
-print('================================================================')
+print('======================================================================')
 
 # Fill variables with like variables to retain grain
 df2 = df2.copy()
@@ -902,6 +910,7 @@ df2.loc[:, quant] = df2.loc[:, quant].replace('', 0)
 # Concatenate main data with filled data due to missing trade time points
 df = pd.concat([df1, df2])
 df = df.drop(['State Code'], axis=1)
+
 # Remove data not needed
 del df1, df2
 
@@ -918,7 +927,7 @@ del df1, df2
 df = df.copy()
 df['Date_Announced'] = pd.to_datetime(df['Date_Announced'].astype(object), 
                                        format='%m/%d/%Y')
-df[['US_Port_State', "Date_Announced"]].value_counts()
+df[['US_Port_State', 'Date_Announced']].value_counts()
 
 df['Effective_Date'] = pd.to_datetime(df['Effective_Date'].astype(object), 
                                        format='%m/%d/%Y')
@@ -937,7 +946,7 @@ df2 = df[df['Date_Weekly_COVID'].notna()]
 
 print('\nNumber of unique US states is:', 
       df2[['State']].nunique())
-print('======================================')
+print('======================================================================')
 
 df2 = df2.copy()
 df2['Date_Weekly_COVID'] = pd.to_datetime(df2.Date_Weekly_COVID)
@@ -956,8 +965,8 @@ df3 = df3.reset_index()
 df3.rename(columns={0: 'Time0_StateCase'}, inplace=True)
 
 # Merge so data has first occurrence of COVID cases in US states
-df3 = pd.merge(df3, df2, how='left', left_on=['US_Port_State','Time0_StateCase'], 
-               right_on=['US_Port_State','Date_Weekly_COVID'])
+df3 = pd.merge(df3, df2, how='left', left_on=['US_Port_State', 'Time0_StateCase'], 
+               right_on=['US_Port_State', 'Date_Weekly_COVID'])
 df3 = df3.drop_duplicates()
 
 df3 = df3.copy()
@@ -982,9 +991,9 @@ df2 = df2.drop_duplicates()
 
 # Calculate percent change from number of cases in each week compared to the first week in state
 df2 = df2.copy()
-df2['cases_pctdelta'] = df2.apply(lambda x: (x['cases_weekly'] - 
-                                             x['cases_state_firstweek'] / 
-                                             x['cases_state_firstweek']) * 100, 
+df2['cases_pctdelta'] = df2.apply(lambda x: (x['cases_weekly'] 
+                                             - x['cases_state_firstweek']
+                                             / x['cases_state_firstweek'])*100, 
                                   axis=1)
 
 # Add the missing covid data to concat nicely
@@ -1021,8 +1030,8 @@ df3 = df3.reset_index()
 df3.rename(columns={0: 'Time0_StateDeath'}, inplace=True)
 
 # Merge so data has first occurrence of COVID deaths in US states
-df3 = pd.merge(df3, df2, how='left', left_on=['US_Port_State','Time0_StateDeath'],
-               right_on=['US_Port_State','Date_Weekly_COVID'])
+df3 = pd.merge(df3, df2, how='left', left_on=['US_Port_State', 'Time0_StateDeath'],
+               right_on=['US_Port_State',' Date_Weekly_COVID'])
 df3 = df3.drop_duplicates()
 
 df3 = df3.copy()
@@ -1037,17 +1046,17 @@ df2['Year_M'] = df2['Date_Weekly_COVID'].dt.year
 df3 = df3.drop(['Date_Weekly_COVID'], axis=1)
 df3 = df3.drop_duplicates()
 
-df2 = pd.merge(df2, df3, how='left', left_on=['US_Port_State','Year_M'], 
-                right_on=['US_Port_State','Year_M'])
+df2 = pd.merge(df2, df3, how='left', left_on=['US_Port_State', 'Year_M'], 
+                right_on=['US_Port_State', 'Year_M'])
 
 df2 = df2.drop_duplicates()
 df2 = df2.drop(['Year_M'], axis=1)
 
 # Calculate percent change from number of deaths in each week compared to the first week in state
 df2 = df2.copy()
-df2['deaths_pctdelta'] = df2.apply(lambda x: (x['deaths_weekly'] -
-                                              x['deaths_state_firstweek'] / 
-                                              x['deaths_state_firstweek']) * 100,
+df2['deaths_pctdelta'] = df2.apply(lambda x: (x['deaths_weekly'] 
+                                              - x['deaths_state_firstweek'] 
+                                              / x['deaths_state_firstweek'])*100, 
                                    axis=1)
 
 # Add the missing COVID data to concat nicely
@@ -1072,8 +1081,8 @@ new_df1 = (df.groupby(['State', pd.Grouper(key='Date_Weekly_Agg',
 new_df1.rename(columns={'Metric_Tons':'Metric_Tons_Weekly'}, inplace=True)
 new_df1 = new_df1.drop_duplicates()
 
-df = pd.merge(df, new_df1, how='left', left_on=['State','Date_Weekly_Agg'],
-              right_on=['State','Date_Weekly_Agg'])
+df = pd.merge(df, new_df1, how='left', left_on=['State', 'Date_Weekly_Agg'],
+              right_on=['State', 'Date_Weekly_Agg'])
 df = df.drop_duplicates()
 
 # Remove data not needed
@@ -1081,18 +1090,18 @@ del new_df1
 
 ##############################################################################
 # Drop variables not using
-
 df = df.drop(['HS_Class', 'VIN_Quantity', 'US_company_Clustered', 
               'Foreign_Company_Clustered','Foreign_Company_Country_Clustered', 
-              'US_Company_State', 'US_Port_State', 'state', 'State_Region'],axis=1)
+              'US_Company_State', 'US_Port_State', 'state', 'State_Region'], 
+             axis=1)
 df = df.drop_duplicates()
 
 print('\nDimensions of Data Warehouse for EDA:', df.shape)  
-print('======================================')
+print('======================================================================')
 
-print('\nMissing Data in Warehouse :'
+print('\nMissing Data in Warehouse :')
 print(df.isna().sum())  
-print('======================================')
+print('======================================================================')
 
 # Close to create log file
 sys.stdout.close()
@@ -1102,4 +1111,3 @@ sys.stdout=stdoutOrigin
 df.to_csv('combined_trade.csv', index=False, encoding='utf-8-sig')
 ##############################################################################
 # Now perform EDA for variable selection
-
