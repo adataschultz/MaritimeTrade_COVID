@@ -159,7 +159,7 @@ sig. <- sigma(argfit) # fitted hat{sigma}_t
 
 # Simulate B paths
 ```{r}
-B <- 100 # Use less for the model with all the years
+B <- 300 # Use less for the model with all the years
 diftrain.sim.obj <- ugarchpath(fspec, n.sim = 12,
                                 m.sim = B) # simulate future paths
 ```
@@ -228,8 +228,9 @@ legend("bottomright", bty = "n", lty = rep(1, 6), lwd = 1.6,
 ```
 # Create PDF to save
 ```{r}
-pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations100/100 Simulated ARMA-GARCH 2010-2020 predictions and CIs.pdf", width = 10,
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300/300 Simulated ARMA-GARCH 2010-2020 predictions and CIs.pdf", width = 10,
     height = 10 )
+#, ylim = yran
 plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
      xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
      main = "Simulated ARMA-GARCH 2010-2020 predictions and CIs")
@@ -325,7 +326,7 @@ sig. <- sigma(argfit1) # fitted hat{sigma}_t
 
 # Simulate B paths
 ```{r}
-B <- 100 # Use less for the model with all the years
+B <- 300 # Use less for the model with all the years
 diftrain1.sim.obj <- ugarchpath(fspec, n.sim = 12,
                                 m.sim = B) # simulate future paths
 ```
@@ -394,7 +395,7 @@ legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
 ```
 # Create PDF to save
 ```{r}
-pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations100/100 Simulated ARMA-GARCH 2010-2020 Aggregrated Monthly Predictions and CIs.pdf", 
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300/300 Simulated ARMA-GARCH 2010-2020 Aggregrated Monthly Predictions and CIs.pdf", 
     width = 10,height = 10)
 plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
      xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
@@ -502,7 +503,7 @@ sig. <- sigma(argfit19) # fitted hat{sigma}_t
 
 # Simulate B paths
 ```{r}
-B <- 100 # Use less for the model with all the years
+B <- 300 # Use less for the model with all the years
 diftrain19.sim.obj <- ugarchpath(fspec, n.sim = 12,
                                 m.sim = B) # simulate future paths
 ```
@@ -571,7 +572,7 @@ legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
 ```
 # Create PDF to save
 ```{r}
-pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations100/100 Simulated ARMA-GARCH 2010-2019 Aggregrated Monthly predictions and CIs.pdf", width = 10,
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300/300 Simulated ARMA-GARCH 2010-2019 Aggregrated Monthly predictions and CIs.pdf", width = 10,
     height = 10 )
 plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
      xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
@@ -680,7 +681,7 @@ sig. <- sigma(argfit11) # fitted hat{sigma}_t
 
 # Simulate B paths
 ```{r}
-B <- 100 # Use less for the model with all the years
+B <- 300 # Use less for the model with all the years
 diftrain11.sim.obj <- ugarchpath(fspec, n.sim = 12,
                                 m.sim = B) # simulate future paths
 ```
@@ -749,7 +750,7 @@ legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
 ```
 # Create PDF to save
 ```{r}
-pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations100/100 Simulated ARMA-GARCH 2010-2011 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300/300 Simulated ARMA-GARCH 2010-2011 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
     height = 10 )
 plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
      xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
@@ -858,7 +859,7 @@ sig. <- sigma(argfit12) # fitted hat{sigma}_t
 
 # Simulate B paths
 ```{r}
-B <- 100 # Use less for the model with all the years
+B <-300 # Use less for the model with all the years
 diftrain12.sim.obj <- ugarchpath(fspec, n.sim = 12,
                                 m.sim = B) # simulate future paths
 ```
@@ -927,7 +928,7 @@ legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
 ```
 # Create PDF to save
 ```{r}
-pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations100/100 Simulated ARMA-GARCH 2010-2012 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300/300 Simulated ARMA-GARCH 2010-2012 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
     height = 10)
 plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
      xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
@@ -1036,7 +1037,7 @@ sig. <- sigma(argfit13) # fitted hat{sigma}_t
 
 # Simulate B paths
 ```{r}
-B <- 100 # Use less for the model with all the years
+B <- 300 # Use less for the model with all the years
 diftrain13.sim.obj <- ugarchpath(fspec, n.sim = 12,
                                 m.sim = B) # simulate future paths
 ```
@@ -1105,7 +1106,7 @@ legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
 ```
 # Create PDF to save
 ```{r}
-pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations100/100 Simulated ARMA-GARCH 2010-2013 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300/300 Simulated ARMA-GARCH 2010-2013 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
     height = 10 )
 plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
      xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
@@ -1214,7 +1215,7 @@ sig. <- sigma(argfit15) # fitted hat{sigma}_t
 
 # Simulate B paths
 ```{r}
-B <- 100 # Use less for the model with all the years
+B <- 300 # Use less for the model with all the years
 diftrain15.sim.obj <- ugarchpath(fspec, n.sim = 12,
                                 m.sim = B) # simulate future paths
 ```
@@ -1283,7 +1284,7 @@ legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
 ```
 # Create PDF to save
 ```{r}
-pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations100/100 Simulated ARMA-GARCH 2010-2015 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300/300 Simulated ARMA-GARCH 2010-2015 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
     height = 10 )
 plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
      xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
@@ -1316,6 +1317,7 @@ mean(sqrt((mu.predict.txn-bymonth$Metric_Tons[t.])^2))
 # MAE
 mean(abs(mu.predict.txn-bymonth$Metric_Tons[t.]))
 ```
+
 ################################################################################
 ################################################################################
 ################################################################################
