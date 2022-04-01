@@ -1,0 +1,1154 @@
+---
+title: "aschu"
+output: html_notebook
+---
+################################################################################
+################################### Univariate Garch ###########################
+################################################################################
+# Set working directory
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/tmp')
+require("knitr")
+opts_knit$set(root.dir = "D:/MaritimeTrade/Data")
+```
+
+# Install and load required packages 
+```{r}
+EnsurePackage<-function(x)
+{
+  x<-as.character(x)
+  if (!require(x,character.only=TRUE))
+  {
+    install.packages(pkgs=x,dependencies = TRUE)
+    require(x,character.only=TRUE)
+  }
+}
+
+EnsurePackage('tidyverse')
+EnsurePackage('zoo')
+EnsurePackage('lubridate')
+EnsurePackage('dplyr')
+EnsurePackage('forecast')
+EnsurePackage("tsbox")
+EnsurePackage("xts")
+EnsurePackage("rugarch")
+EnsurePackage("qrmtools")
+EnsurePackage("tseries")
+
+library(tidyverse)
+library(zoo)
+library(lubridate)
+library(dplyr)
+library(forecast)
+library(tsbox)
+library(xts)
+library(rugarch)
+library(qrmtools)
+library(tseries)
+```
+
+# Set seed and read trade data
+```{r}
+set.seed(42)
+df = read.csv("combined_trade_final.csv")
+dim(df)
+summary(df)
+```
+# Select variables to use build multivariate models eventually
+```{r}
+df <- df[,c(4,11,14,15,2)]
+
+# Use only complete data
+df <- df[complete.cases(df),]
+
+summary(df)
+```
+# Format variables for time series
+```{r}
+df$DateTime <- as.Date(df$DateTime)
+df$DateTime_YearMonth <- as.Date(as.yearmon(df$DateTime))
+```
+
+# Aggregate data
+```{r}
+bymonth <- df %>%                         
+  group_by(DateTime_YearMonth) %>% 
+  dplyr::summarize(value = sum(Metric_Tons)) %>% 
+  as.data.frame()
+
+# Use only complete data
+bymonth <- bymonth[complete.cases(bymonth),]
+```
+
+# Change column name of aggregrated data
+```{r}
+colnames(bymonth)[which(names(bymonth) == "value")] <- "Metric_Tons"
+summary(bymonth)
+```
+
+# All years - aggregated to monthly
+```{r}
+train1 <- ts(data = log(bymonth$Metric_Tons[which(year(bymonth$DateTime_YearMonth) < 2021)]), start = c(2010, 1), frequency = 12)
+```
+
+# Examine if time series is stationary
+# GARCH will assume that these time series are stationary
+```{r}
+adf.test(train1) # Not stationary
+ndiffs(train1) # Difference = 1 makes it stationary
+diftrain1 <- diff(train1, differences = 1)
+
+# Examine ARIMA parameters  to use for the ARMA-GARCH models
+fit1 <- auto.arima(diftrain1)
+fit1
+```
+# Create ARMA order for different forecast models
+```{r}
+armaOrder1 <- c(0,1) # ARMA order
+
+garchOrder <- c(1,1) # GARCH order
+
+varModel <- list(model = "sGARCH", garchOrder = garchOrder)
+
+spec1 <- ugarchspec(varModel, mean.model = list(armaOrder = armaOrder1),
+                   distribution.model = "std")
+```
+`
+# Fit to the data using UGARCH
+```{r}
+argfit1 <- ugarchfit(spec1, data = diftrain1)
+argfit1
+```
+
+# Predictions for each series
+```{r}
+# VaR confidence level we consider here
+alpha <- 0.95
+
+# Extract fitted VaR_alpha
+VaR. <- as.numeric(quantile(argfit1, probs = alpha))
+
+# Build manually and compare the two
+nu. <- argfit1@fit$coef[["shape"]]
+```
+
+# Predict from the fitted process
+```{r}
+fspec <- getspec(argfit1) # specification of the fitted process
+setfixed(fspec) <- as.list(coef(argfit1)) # set the parameters to the fitted ones
+pred <- ugarchforecast(fspec, data = diftrain1,
+                       n.ahead = 12) # predict from the fitted process
+```
+
+# Extract the resulting series
+```{r}
+mu.predict <- fitted(pred)  # extract predicted X_t (= conditional mean mu_t; note: E[Z] = 0)
+
+sig.predict <- sigma(pred) # extract predicted sigma_t
+
+VaR.predict <- as.numeric(quantile(pred, probs = alpha)) # corresponding predicted VaR_alpha
+```
+
+# Extract the resulting series
+```{r}
+mu. <- fitted(argfit1) # fitted hat{mu}_t (= hat{X}_t)
+sig. <- sigma(argfit1) # fitted hat{sigma}_t
+```
+
+# Simulate B paths
+```{r}
+B <- 300000 # Use less for the model with all the years
+diftrain1.sim.obj <- ugarchpath(fspec, n.sim = 12,
+                                m.sim = B) # simulate future paths
+```
+
+# Compute simulated VaR_alpha and corresponding (simulated) confidence intervals
+# Each series is now an (m, B) matrix (each column is one path of length m)
+```{r}
+X.sim <- fitted(diftrain1.sim.obj) # extract simulated X_t
+X.sim.txn <- apply(X.sim, 2,
+                   function(x) exp(diffinv(x,lag=1,
+                                           differences=1,
+                                           train1[length(train1)]))[-c(1)])
+sig.sim <- sigma(diftrain1.sim.obj) # extract sigma_t
+eps.sim <- diftrain1.sim.obj@path$residSim # extract epsilon_t
+VaR.sim <- (X.sim - eps.sim) + sig.sim * sqrt((nu.-2)/nu.) * qt(alpha, df = nu.) # (m, B) matrix
+
+x.CI <- apply(X.sim, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+mu.CI <- apply(X.sim.txn, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+```
+
+# Transform back to the tonnage values
+```{r}
+diftrain.txn <- exp(diffinv(diftrain1,lag=1,differences=1,train1[1]))[-c(1)]
+mu.txn <- exp(diffinv(as.numeric(mu.), lag=1, differences=1, train1[1]))[-c(1)]
+mu.predict.txn <- exp(diffinv(as.numeric(mu.predict),lag=1, differences=1,
+                              train1[length(train1)]))[-c(1)]
+```
+
+# Simulated (original) data (X_t), fitted conditional mean mu_t and VaR_alpha
+```{r}
+t. <- length(diftrain1) + seq_len(12) # future time points
+tfull <- seq(from = 1, to = length(diftrain1)+12, by = 1)
+```
+
+# Setup for graphing
+```{r}
+yran <- range(diftrain.txn, # simulated path
+              mu.txn, #VaR., # fitted conditional mean and VaR_alpha
+              mu.predict.txn,
+              bymonth$Metric_Tons[tfull],
+              mu.CI[1,],mu.CI[2,]) # predicted mean, VaR and CIs
+myran <- max(abs(yran))
+yran <- c(14, myran) # y-range for the plot
+xran <- c(1, length(diftrain1) + 12) # x-range for the plot
+```
+
+```{r}
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-20 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) 
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5),  
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+```
+# Create PDF to save
+```{r}
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300000/300000 Simulated ARMA-GARCH 2010-2020 Aggregrated Monthly Predictions and CIs.pdf", 
+    width = 10,height = 10)
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-20 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) # hat{\mu}_t
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5), 
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+
+dev.off()
+```
+
+# Model metrics
+```{r}
+# MSE
+mean((mu.predict.txn-bymonth$Metric_Tons[t.])^2)
+# RMSE
+mean(sqrt((mu.predict.txn-bymonth$Metric_Tons[t.])^2))
+# MAE
+mean(abs(mu.predict.txn-bymonth$Metric_Tons[t.]))
+```
+
+################################################################################
+################################################################################
+################################################################################
+# Without 2020 - aggregated to monthly
+```{r}
+train19 <- ts(data = log(bymonth$Metric_Tons[which(year(bymonth$DateTime_YearMonth) < 2020)]), start = c(2010, 1), frequency = 12)
+```
+
+# Examine if time series is stationary
+# GARCH will assume that these time series are stationary
+```{r}
+adf.test(train19)
+ndiffs(train19)
+diftrain19 <- diff(train19, differences = 1)
+
+# Examine ARIMA parameters  to use for the ARMA-GARCH models
+fit19 <- auto.arima(diftrain19)
+fit19
+```
+# Create ARMA order for different forecast models
+```{r}
+armaOrder19 <- c(0,1)
+
+garchOrder <- c(1,1) # GARCH order
+
+varModel <- list(model = "sGARCH", garchOrder = garchOrder)
+
+spec19 <- ugarchspec(varModel, mean.model = list(armaOrder = armaOrder19),
+                   distribution.model = "std")
+```
+`
+# Fit to the data using UGARCH
+```{r}
+argfit19 <- ugarchfit(spec19, data = diftrain19)
+argfit19
+```
+
+# Predictions for each series
+```{r}
+# VaR confidence level we consider here
+alpha <- 0.95
+
+# Extract fitted VaR_alpha
+VaR. <- as.numeric(quantile(argfit19, probs = alpha))
+
+# Build manually and compare the two
+nu. <- argfit19@fit$coef[["shape"]]
+```
+
+# Predict from the fitted process
+```{r}
+fspec <- getspec(argfit19) # specification of the fitted process
+setfixed(fspec) <- as.list(coef(argfit19)) # set the parameters to the fitted ones
+pred <- ugarchforecast(fspec, data = diftrain19,
+                       n.ahead = 12) # predict from the fitted process
+```
+
+# Extract the resulting series
+```{r}
+mu.predict <- fitted(pred)  # extract predicted X_t (= conditional mean mu_t; note: E[Z] = 0)
+
+sig.predict <- sigma(pred) # extract predicted sigma_t
+
+VaR.predict <- as.numeric(quantile(pred, probs = alpha)) # corresponding predicted VaR_alpha
+```
+
+# Extract the resulting series
+```{r}
+mu. <- fitted(argfit19) # fitted hat{mu}_t (= hat{X}_t)
+sig. <- sigma(argfit19) # fitted hat{sigma}_t
+```
+
+# Simulate B paths
+```{r}
+B <- 300000 # Use less for the model with all the years
+diftrain19.sim.obj <- ugarchpath(fspec, n.sim = 12,
+                                m.sim = B) # simulate future paths
+```
+
+# Compute simulated VaR_alpha and corresponding (simulated) confidence intervals
+# Each series is now an (m, B) matrix (each column is one path of length m)
+```{r}
+X.sim <- fitted(diftrain19.sim.obj) # extract simulated X_t
+X.sim.txn <- apply(X.sim, 2,
+                   function(x) exp(diffinv(x,lag=1,
+                                           differences=1,
+                                           train19[length(train19)]))[-c(1)])
+sig.sim <- sigma(diftrain19.sim.obj) # extract sigma_t
+eps.sim <- diftrain19.sim.obj@path$residSim # extract epsilon_t
+VaR.sim <- (X.sim - eps.sim) + sig.sim * sqrt((nu.-2)/nu.) * qt(alpha, df = nu.) # (m, B) matrix
+
+x.CI <- apply(X.sim, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+mu.CI <- apply(X.sim.txn, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+```
+
+# Transform back to the tonnage values
+```{r}
+diftrain.txn <- exp(diffinv(diftrain19,lag=1,differences=1,train19[1]))[-c(1)]
+mu.txn <- exp(diffinv(as.numeric(mu.), lag=1, differences=1, train19[1]))[-c(1)]
+mu.predict.txn <- exp(diffinv(as.numeric(mu.predict),lag=1, differences=1,
+                              train19[length(train19)]))[-c(1)]
+```
+
+# Simulated (original) data (X_t), fitted conditional mean mu_t and VaR_alpha
+```{r}
+t. <- length(diftrain19) + seq_len(12) # future time points
+tfull <- seq(from = 1, to = length(diftrain19)+12, by = 1)
+```
+
+# Setup for graphing
+```{r}
+yran <- range(diftrain.txn, # simulated path
+              mu.txn, #VaR., # fitted conditional mean and VaR_alpha
+              mu.predict.txn,
+              bymonth$Metric_Tons[tfull],
+              mu.CI[1,],mu.CI[2,]) # predicted mean, VaR and CIs
+myran <- max(abs(yran))
+yran <- c(14, myran) # y-range for the plot
+xran <- c(1, length(diftrain19) + 12) # x-range for the plot
+```
+
+```{r}
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-19 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) 
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5),  
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+```
+# Create PDF to save
+```{r}
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300000/300000 Simulated ARMA-GARCH 2010-2019 Aggregrated Monthly predictions and CIs.pdf", width = 10,
+    height = 10 )
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-2019 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) # hat{\mu}_t
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5), 
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+
+dev.off()
+```
+
+# Model metrics
+```{r}
+# MSE
+mean((mu.predict.txn-bymonth$Metric_Tons[t.])^2)
+# RMSE
+mean(sqrt((mu.predict.txn-bymonth$Metric_Tons[t.])^2))
+# MAE
+mean(abs(mu.predict.txn-bymonth$Metric_Tons[t.]))
+```
+
+################################################################################
+################################################################################
+################################################################################
+# 2010-11 - aggregated to monthly
+```{r}
+train11 <- ts(data = log(bymonth$Metric_Tons[which(year(bymonth$DateTime_YearMonth) < 2012)]), 
+              start = c(2010, 1), frequency = 12)
+```
+
+# Examine if time series is stationary
+# GARCH will assume that these time series are stationary
+```{r}
+adf.test(train11)
+ndiffs(train11)
+diftrain11 <- diff(train11)
+
+# Examine ARIMA parameters  to use for the ARMA-GARCH models
+fit11 <- auto.arima(diftrain11)
+fit11
+```
+# Create ARMA order for different forecast models
+```{r}
+armaOrder11 <- c(0,0)
+
+garchOrder <- c(1,1) # GARCH order
+
+varModel <- list(model = "sGARCH", garchOrder = garchOrder)
+
+spec11 <- ugarchspec(varModel, mean.model = list(armaOrder = armaOrder11),
+                   distribution.model = "std")
+```
+
+# Fit to the data using UGARCH
+```{r}
+argfit11 <- ugarchfit(spec11, data = diftrain11)
+argfit11
+```
+
+# Predictions for each series
+```{r}
+# VaR confidence level we consider here
+alpha <- 0.95
+
+# Extract fitted VaR_alpha
+VaR. <- as.numeric(quantile(argfit11, probs = alpha))
+
+# Build manually and compare the two
+nu. <- argfit11@fit$coef[["shape"]]
+```
+
+# Predict from the fitted process
+```{r}
+fspec <- getspec(argfit11) # specification of the fitted process
+setfixed(fspec) <- as.list(coef(argfit11)) # set the parameters to the fitted ones
+pred <- ugarchforecast(fspec, data = diftrain11,
+                       n.ahead = 12) # predict from the fitted process
+```
+
+# Extract the resulting series
+```{r}
+mu.predict <- fitted(pred)  # extract predicted X_t (= conditional mean mu_t; note: E[Z] = 0)
+
+sig.predict <- sigma(pred) # extract predicted sigma_t
+
+VaR.predict <- as.numeric(quantile(pred, probs = alpha)) # corresponding predicted VaR_alpha
+```
+
+# Extract the resulting series
+```{r}
+mu. <- fitted(argfit11) # fitted hat{mu}_t (= hat{X}_t)
+sig. <- sigma(argfit11) # fitted hat{sigma}_t
+```
+
+# Simulate B paths
+```{r}
+B <- 300000 # Use less for the model with all the years
+diftrain11.sim.obj <- ugarchpath(fspec, n.sim = 12,
+                                m.sim = B) # simulate future paths
+```
+
+# Compute simulated VaR_alpha and corresponding (simulated) confidence intervals
+# Each series is now an (m, B) matrix (each column is one path of length m)
+```{r}
+X.sim <- fitted(diftrain11.sim.obj) # extract simulated X_t
+X.sim.txn <- apply(X.sim, 2,
+                   function(x) exp(diffinv(x,lag=1,
+                                           differences=1,
+                                           train11[length(train11)]))[-c(1)])
+sig.sim <- sigma(diftrain11.sim.obj) # extract sigma_t
+eps.sim <- diftrain11.sim.obj@path$residSim # extract epsilon_t
+VaR.sim <- (X.sim - eps.sim) + sig.sim * sqrt((nu.-2)/nu.) * qt(alpha, df = nu.) # (m, B) matrix
+
+x.CI <- apply(X.sim, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+mu.CI <- apply(X.sim.txn, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+```
+
+# Transform back to the tonnage values
+```{r}
+diftrain.txn <- exp(diffinv(diftrain11,lag=1,differences=1,train11[1]))[-c(1)]
+mu.txn <- exp(diffinv(as.numeric(mu.), lag=1, differences=1, train11[1]))[-c(1)]
+mu.predict.txn <- exp(diffinv(as.numeric(mu.predict),lag=1, differences=1,
+                              train11[length(train11)]))[-c(1)]
+```
+
+# Simulated (original) data (X_t), fitted conditional mean mu_t and VaR_alpha
+```{r}
+t. <- length(diftrain11) + seq_len(12) # future time points
+tfull <- seq(from = 1, to = length(diftrain11)+12, by = 1)
+```
+
+# Setup for graphing
+```{r}
+yran <- range(diftrain.txn, # simulated path
+              mu.txn, #VaR., # fitted conditional mean and VaR_alpha
+              mu.predict.txn,
+              bymonth$Metric_Tons[tfull],
+              mu.CI[1,],mu.CI[2,]) # predicted mean, VaR and CIs
+myran <- max(abs(yran))
+yran <- c(14, myran) # y-range for the plot
+xran <- c(1, length(diftrain11) + 12) # x-range for the plot
+```
+
+```{r}
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-11 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) 
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5),  
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+```
+# Create PDF to save
+```{r}
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300000/300000 Simulated ARMA-GARCH 2010-2011 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
+    height = 10 )
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-11 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) # hat{\mu}_t
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5), 
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+
+dev.off()
+```
+
+# Model metrics
+```{r}
+# MSE
+mean((mu.predict.txn-bymonth$Metric_Tons[t.])^2)
+# RMSE
+mean(sqrt((mu.predict.txn-bymonth$Metric_Tons[t.])^2))
+# MAE
+mean(abs(mu.predict.txn-bymonth$Metric_Tons[t.]))
+```
+
+################################################################################
+################################################################################
+################################################################################
+# 2010-12 - aggregated to monthly
+```{r}
+train12 <- ts(data = log(bymonth$Metric_Tons[which(year(bymonth$DateTime_YearMonth) < 2013)]),
+              start = c(2010, 1), frequency = 12)
+```
+
+# Examine if time series is stationary
+# GARCH will assume that these time series are stationary
+```{r}
+adf.test(train12)
+ndiffs(train12)
+diftrain12 <- diff(train12, differences = 1)
+
+# Examine ARIMA parameters  to use for the ARMA-GARCH models
+fit12 <- auto.arima(diftrain12)
+fit12
+```
+# Create ARMA order for different forecast models
+```{r}
+armaOrder12 <- c(0,1)
+
+garchOrder <- c(1,1) # GARCH order
+
+varModel <- list(model = "sGARCH", garchOrder = garchOrder)
+
+spec12 <- ugarchspec(varModel, mean.model = list(armaOrder = armaOrder12),
+                   distribution.model = "std")
+```
+`
+# Fit to the data using UGARCH
+```{r}
+argfit12 <- ugarchfit(spec12, data = diftrain12)
+argfit12
+```
+
+# Predictions for each series
+```{r}
+# VaR confidence level we consider here
+alpha <- 0.95
+
+# Extract fitted VaR_alpha
+VaR. <- as.numeric(quantile(argfit12, probs = alpha))
+
+# Build manually and compare the two
+nu. <- argfit12@fit$coef[["shape"]]
+```
+
+# Predict from the fitted process
+```{r}
+fspec <- getspec(argfit12) # specification of the fitted process
+setfixed(fspec) <- as.list(coef(argfit12)) # set the parameters to the fitted ones
+pred <- ugarchforecast(fspec, data = diftrain12,
+                       n.ahead = 12) # predict from the fitted process
+```
+
+# Extract the resulting series
+```{r}
+mu.predict <- fitted(pred)  # extract predicted X_t (= conditional mean mu_t; note: E[Z] = 0)
+
+sig.predict <- sigma(pred) # extract predicted sigma_t
+
+VaR.predict <- as.numeric(quantile(pred, probs = alpha)) # corresponding predicted VaR_alpha
+```
+
+# Extract the resulting series
+```{r}
+mu. <- fitted(argfit12) # fitted hat{mu}_t (= hat{X}_t)
+sig. <- sigma(argfit12) # fitted hat{sigma}_t
+```
+
+# Simulate B paths
+```{r}
+B <-300000 # Use less for the model with all the years
+diftrain12.sim.obj <- ugarchpath(fspec, n.sim = 12,
+                                m.sim = B) # simulate future paths
+```
+
+# Compute simulated VaR_alpha and corresponding (simulated) confidence intervals
+# Each series is now an (m, B) matrix (each column is one path of length m)
+```{r}
+X.sim <- fitted(diftrain12.sim.obj) # extract simulated X_t
+X.sim.txn <- apply(X.sim, 2,
+                   function(x) exp(diffinv(x,lag=1,
+                                           differences=1,
+                                           train12[length(train12)]))[-c(1)])
+sig.sim <- sigma(diftrain12.sim.obj) # extract sigma_t
+eps.sim <- diftrain12.sim.obj@path$residSim # extract epsilon_t
+VaR.sim <- (X.sim - eps.sim) + sig.sim * sqrt((nu.-2)/nu.) * qt(alpha, df = nu.) # (m, B) matrix
+
+x.CI <- apply(X.sim, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+mu.CI <- apply(X.sim.txn, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+```
+
+# Transform back to the tonnage values
+```{r}
+diftrain.txn <- exp(diffinv(diftrain12,lag=1,differences=1,train12[1]))[-c(1)]
+mu.txn <- exp(diffinv(as.numeric(mu.), lag=1, differences=1, train12[1]))[-c(1)]
+mu.predict.txn <- exp(diffinv(as.numeric(mu.predict),lag=1, differences=1,
+                              train12[length(train12)]))[-c(1)]
+```
+
+# Simulated (original) data (X_t), fitted conditional mean mu_t and VaR_alpha
+```{r}
+t. <- length(diftrain12) + seq_len(12) # future time points
+tfull <- seq(from = 1, to = length(diftrain12)+12, by = 1)
+```
+
+# Setup for graphing
+```{r}
+yran <- range(diftrain.txn, # simulated path
+              mu.txn, #VaR., # fitted conditional mean and VaR_alpha
+              mu.predict.txn,
+              bymonth$Metric_Tons[tfull],
+              mu.CI[1,],mu.CI[2,]) # predicted mean, VaR and CIs
+myran <- max(abs(yran))
+yran <- c(14, myran) # y-range for the plot
+xran <- c(1, length(diftrain12) + 12) # x-range for the plot
+```
+
+```{r}
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-12 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) 
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5),  
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+```
+# Create PDF to save
+```{r}
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300000/300000 Simulated ARMA-GARCH 2010-2012 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
+    height = 10)
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-12 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) # hat{\mu}_t
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5), 
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+
+dev.off()
+```
+
+# Model metrics
+```{r}
+# MSE
+mean((mu.predict.txn-bymonth$Metric_Tons[t.])^2)
+# RMSE
+mean(sqrt((mu.predict.txn-bymonth$Metric_Tons[t.])^2))
+# MAE
+mean(abs(mu.predict.txn-bymonth$Metric_Tons[t.]))
+```
+
+################################################################################
+################################################################################
+################################################################################
+# 2010-13 - aggregated to monthly
+```{r}
+train13 <- ts(data = log(bymonth$Metric_Tons[which(year(bymonth$DateTime_YearMonth) < 2014)]),
+              start = c(2010, 1), frequency = 12)
+```
+
+# Examine if time series is stationary
+# GARCH will assume that these time series are stationary
+```{r}
+adf.test(train13)
+ndiffs(train13)
+diftrain13 <- diff(train13, differences = 1)
+
+# Examine ARIMA parameters  to use for the ARMA-GARCH models
+fit13 <- auto.arima(diftrain13)
+fit13
+```
+# Create ARMA order for different forecast models
+```{r}
+armaOrder13 <- c(0,0)
+
+garchOrder <- c(1,1) # GARCH order
+
+varModel <- list(model = "sGARCH", garchOrder = garchOrder)
+
+spec13 <- ugarchspec(varModel, mean.model = list(armaOrder = armaOrder13),
+                   distribution.model = "std")
+```
+`
+# Fit to the data using UGARCH
+```{r}
+argfit13 <- ugarchfit(spec13, data = diftrain13)
+argfit13
+```
+
+# Predictions for each series
+```{r}
+# VaR confidence level we consider here
+alpha <- 0.95
+
+# Extract fitted VaR_alpha
+VaR. <- as.numeric(quantile(argfit13, probs = alpha))
+
+# Build manually and compare the two
+nu. <- argfit13@fit$coef[["shape"]]
+```
+
+# Predict from the fitted process
+```{r}
+fspec <- getspec(argfit13) # specification of the fitted process
+setfixed(fspec) <- as.list(coef(argfit13)) # set the parameters to the fitted ones
+pred <- ugarchforecast(fspec, data = diftrain13,
+                       n.ahead = 12) # predict from the fitted process
+```
+
+# Extract the resulting series
+```{r}
+mu.predict <- fitted(pred)  # extract predicted X_t (= conditional mean mu_t; note: E[Z] = 0)
+
+sig.predict <- sigma(pred) # extract predicted sigma_t
+
+VaR.predict <- as.numeric(quantile(pred, probs = alpha)) # corresponding predicted VaR_alpha
+```
+
+# Extract the resulting series
+```{r}
+mu. <- fitted(argfit13) # fitted hat{mu}_t (= hat{X}_t)
+sig. <- sigma(argfit13) # fitted hat{sigma}_t
+```
+
+# Simulate B paths
+```{r}
+B <- 300000 # Use less for the model with all the years
+diftrain13.sim.obj <- ugarchpath(fspec, n.sim = 12,
+                                m.sim = B) # simulate future paths
+```
+
+# Compute simulated VaR_alpha and corresponding (simulated) confidence intervals
+# Each series is now an (m, B) matrix (each column is one path of length m)
+```{r}
+X.sim <- fitted(diftrain13.sim.obj) # extract simulated X_t
+X.sim.txn <- apply(X.sim, 2,
+                   function(x) exp(diffinv(x,lag=1,
+                                           differences=1,
+                                           train13[length(train13)]))[-c(1)])
+sig.sim <- sigma(diftrain13.sim.obj) # extract sigma_t
+eps.sim <- diftrain13.sim.obj@path$residSim # extract epsilon_t
+VaR.sim <- (X.sim - eps.sim) + sig.sim * sqrt((nu.-2)/nu.) * qt(alpha, df = nu.) # (m, B) matrix
+
+x.CI <- apply(X.sim, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+mu.CI <- apply(X.sim.txn, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+```
+
+# Transform back to the tonnage values
+```{r}
+diftrain.txn <- exp(diffinv(diftrain13,lag=1,differences=1,train13[1]))[-c(1)]
+mu.txn <- exp(diffinv(as.numeric(mu.), lag=1, differences=1, train13[1]))[-c(1)]
+mu.predict.txn <- exp(diffinv(as.numeric(mu.predict),lag=1, differences=1,
+                              train13[length(train13)]))[-c(1)]
+```
+
+# Simulated (original) data (X_t), fitted conditional mean mu_t and VaR_alpha
+```{r}
+t. <- length(diftrain13) + seq_len(12) # future time points
+tfull <- seq(from = 1, to = length(diftrain13)+12, by = 1)
+```
+
+# Setup for graphing
+```{r}
+yran <- range(diftrain.txn, # simulated path
+              mu.txn, #VaR., # fitted conditional mean and VaR_alpha
+              mu.predict.txn,
+              bymonth$Metric_Tons[tfull],
+              mu.CI[1,],mu.CI[2,]) # predicted mean, VaR and CIs
+myran <- max(abs(yran))
+yran <- c(14, myran) # y-range for the plot
+xran <- c(1, length(diftrain13) + 12) # x-range for the plot
+```
+
+```{r}
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-13 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) 
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5),  
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+```
+# Create PDF to save
+```{r}
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300000/300000 Simulated ARMA-GARCH 2010-2013 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
+    height = 10 )
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-13 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) # hat{\mu}_t
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5), 
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+
+dev.off()
+```
+
+# Model metrics
+```{r}
+# MSE
+mean((mu.predict.txn-bymonth$Metric_Tons[t.])^2)
+# RMSE
+mean(sqrt((mu.predict.txn-bymonth$Metric_Tons[t.])^2))
+# MAE
+mean(abs(mu.predict.txn-bymonth$Metric_Tons[t.]))
+```
+
+################################################################################
+################################################################################
+################################################################################
+# 2010-15 - aggregated to monthly
+```{r}
+train15 <- ts(data = log(bymonth$Metric_Tons[which(year(bymonth$DateTime_YearMonth) < 2016)]),
+              start = c(2010, 1), frequency = 12)
+```
+
+# Examine if time series is stationary
+# GARCH will assume that these time series are stationary
+```{r}
+adf.test(train15)
+ndiffs(train15)
+diftrain15 <- diff(train15, differences = 1)
+
+# Examine ARIMA parameters  to use for the ARMA-GARCH models
+fit15 <- auto.arima(diftrain15)
+fit15
+```
+# Create ARMA order for different forecast models
+```{r}
+armaOrder15 <- c(0,1)
+
+garchOrder <- c(1,1) # GARCH order
+
+varModel <- list(model = "sGARCH", garchOrder = garchOrder)
+
+spec15 <- ugarchspec(varModel, mean.model = list(armaOrder = armaOrder15),
+                   distribution.model = "std")
+```
+`
+# Fit to the data using UGARCH
+```{r}
+argfit15 <- ugarchfit(spec15, data = diftrain15)
+argfit15
+```
+
+# Predictions for each series
+```{r}
+# VaR confidence level we consider here
+alpha <- 0.95
+
+# Extract fitted VaR_alpha
+VaR. <- as.numeric(quantile(argfit15, probs = alpha))
+
+# Build manually and compare the two
+nu. <- argfit15@fit$coef[["shape"]]
+```
+
+# Predict from the fitted process
+```{r}
+fspec <- getspec(argfit15) # specification of the fitted process
+setfixed(fspec) <- as.list(coef(argfit15)) # set the parameters to the fitted ones
+pred <- ugarchforecast(fspec, data = diftrain15,
+                       n.ahead = 12) # predict from the fitted process
+```
+
+# Extract the resulting series
+```{r}
+mu.predict <- fitted(pred)  # extract predicted X_t (= conditional mean mu_t; note: E[Z] = 0)
+
+sig.predict <- sigma(pred) # extract predicted sigma_t
+
+VaR.predict <- as.numeric(quantile(pred, probs = alpha)) # corresponding predicted VaR_alpha
+```
+
+# Extract the resulting series
+```{r}
+mu. <- fitted(argfit15) # fitted hat{mu}_t (= hat{X}_t)
+sig. <- sigma(argfit15) # fitted hat{sigma}_t
+```
+
+# Simulate B paths
+```{r}
+B <- 300000 # Use less for the model with all the years
+diftrain15.sim.obj <- ugarchpath(fspec, n.sim = 12,
+                                m.sim = B) # simulate future paths
+```
+
+# Compute simulated VaR_alpha and corresponding (simulated) confidence intervals
+# Each series is now an (m, B) matrix (each column is one path of length m)
+```{r}
+X.sim <- fitted(diftrain15.sim.obj) # extract simulated X_t
+X.sim.txn <- apply(X.sim, 2,
+                   function(x) exp(diffinv(x,lag=1,
+                                           differences=1,
+                                           train15[length(train15)]))[-c(1)])
+sig.sim <- sigma(diftrain15.sim.obj) # extract sigma_t
+eps.sim <- diftrain15.sim.obj@path$residSim # extract epsilon_t
+VaR.sim <- (X.sim - eps.sim) + sig.sim * sqrt((nu.-2)/nu.) * qt(alpha, df = nu.) # (m, B) matrix
+
+x.CI <- apply(X.sim, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+mu.CI <- apply(X.sim.txn, 1, function(x) quantile(x, probs = c(0.025, 0.975)))
+```
+
+# Transform back to the tonnage values
+```{r}
+diftrain.txn <- exp(diffinv(diftrain15,lag=1,differences=1,train15[1]))[-c(1)]
+mu.txn <- exp(diffinv(as.numeric(mu.), lag=1, differences=1, train15[1]))[-c(1)]
+mu.predict.txn <- exp(diffinv(as.numeric(mu.predict),lag=1, differences=1,
+                              train15[length(train15)]))[-c(1)]
+```
+
+# Simulated (original) data (X_t), fitted conditional mean mu_t and VaR_alpha
+```{r}
+t. <- length(diftrain15) + seq_len(12) # future time points
+tfull <- seq(from = 1, to = length(diftrain15)+12, by = 1)
+```
+
+# Setup for graphing
+```{r}
+yran <- range(diftrain.txn, # simulated path
+              mu.txn, #VaR., # fitted conditional mean and VaR_alpha
+              mu.predict.txn,
+              bymonth$Metric_Tons[tfull],
+              mu.CI[1,],mu.CI[2,]) # predicted mean, VaR and CIs
+myran <- max(abs(yran))
+yran <- c(14, myran) # y-range for the plot
+xran <- c(1, length(diftrain15) + 12) # x-range for the plot
+```
+
+```{r}
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-15 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) 
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5),  
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+```
+# Create PDF to save
+```{r}
+pdf("D:/MaritimeTrade/Results/TimeSeries/Garch_Univariate/Simulations300000/300000 Simulated ARMA-GARCH 2010-2015 Aggregrated Monthly Predictions and CIs.pdf", width = 10,
+    height = 10 )
+plot(x = tfull, y= bymonth$Metric_Tons[tfull], type = "l",xlim = xran, 
+     xlab = "Months Since Jan 1 2010", ylab = "Monthly Metric Tonnage",
+     main = "Simulated ARMA-GARCH 2010-15 Aggregrated Predictions and CIs")
+lines(as.numeric(mu.txn), col = adjustcolor("darkblue", alpha.f = 0.5)) # hat{\mu}_t
+
+# Predictions
+lines(t., mu.predict.txn, col = "blue") # predicted process X_t (or mu_t)
+lines(t., VaR.predict, col = "red") # predicted VaR_alpha
+lines(t., mu.CI[1,], col = "orange") # lower 95%-CI for x_alpha
+lines(t., mu.CI[2,], col = "orange") # upper 95%-CI for x_alpha
+legend("topleft", bty = "n", lty = rep(1, 6), lwd = 1.6,
+       col = c("black", adjustcolor("darkblue", alpha.f = 0.5), 
+               "orange"),
+       legend = c(expression(X[t]), #expression(hat(mu)[t]),
+                  expression("Predicted"~mu[t]~"(or"~X[t]*")"),
+                  substitute(widehat(VaR)[a], list(a = alpha)),
+                  substitute("Predicted"~VaR[a], list(a = alpha)),
+                  substitute(expression("95%-CI for"~mu[t], list(a = alpha)))))
+
+dev.off()
+```
+
+# Model metrics
+```{r}
+# MSE
+mean((mu.predict.txn-bymonth$Metric_Tons[t.])^2)
+# RMSE
+mean(sqrt((mu.predict.txn-bymonth$Metric_Tons[t.])^2))
+# MAE
+mean(abs(mu.predict.txn-bymonth$Metric_Tons[t.]))
+```
+
+################################################################################
+################################################################################
+################################################################################
