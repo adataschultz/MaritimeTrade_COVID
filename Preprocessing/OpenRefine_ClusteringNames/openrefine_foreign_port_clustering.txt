@@ -1,0 +1,330 @@
+[
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "Column",
+    "expression": "value.toNumber()",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column Column using expression value.toNumber()"
+  },
+  {
+    "op": "core/column-addition",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "baseColumnName": "Foreign_Port",
+    "expression": "grel:value",
+    "onError": "set-to-blank",
+    "newColumnName": "Foreign_Port_Clustered",
+    "columnInsertIndex": 2,
+    "description": "Create column Foreign_Port_Clustered at index 2 based on column Foreign_Port using expression grel:value"
+  },
+  {
+    "op": "core/mass-edit",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "Foreign_Port_Clustered",
+    "expression": "value",
+    "edits": [
+      {
+        "from": [
+          "LIVERPOOL",
+          "LIVERPÒOL"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "LIVERPOOL"
+      }
+    ],
+    "description": "Mass edit cells in column Foreign_Port_Clustered"
+  },
+  {
+    "op": "core/mass-edit",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "Foreign_Port_Clustered",
+    "expression": "value",
+    "edits": [
+      {
+        "from": [
+          "TIN CAN ISLAND",
+          "TINCAN ISLAND"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "TIN CAN ISLAND"
+      },
+      {
+        "from": [
+          "VIEUX FORT",
+          "VIEUX-FORT"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "VIEUX FORT"
+      },
+      {
+        "from": [
+          "HAI PHONG",
+          "HAIPHONG"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "HAI PHONG"
+      },
+      {
+        "from": [
+          "NANSHA",
+          "NANSHAN"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "NANSHA"
+      },
+      {
+        "from": [
+          "GEORGE TOWN",
+          "GEORGETOWN"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "GEORGE TOWN"
+      },
+      {
+        "from": [
+          "BASSE TERRE",
+          "BASSETERRE"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "BASSE TERRE"
+      }
+    ],
+    "description": "Mass edit cells in column Foreign_Port_Clustered"
+  },
+  {
+    "op": "core/mass-edit",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "Foreign_Port_Clustered",
+    "expression": "value",
+    "edits": [
+      {
+        "from": [
+          "MISRATA",
+          "MISRATAH"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "MISRATA"
+      },
+      {
+        "from": [
+          "TALARA",
+          "TOLIARA"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "TALARA"
+      },
+      {
+        "from": [
+          "ZHANJIANG",
+          "ZHENJIANG"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "ZHANJIANG"
+      },
+      {
+        "from": [
+          "WAIHAI",
+          "WEIHAI"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "WAIHAI"
+      },
+      {
+        "from": [
+          "MASAN",
+          "MASHAN"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "MASAN"
+      },
+      {
+        "from": [
+          "TARANTO",
+          "TORONTO"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "TARANTO"
+      },
+      {
+        "from": [
+          "TAVOY",
+          "TAWAU"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "TAVOY"
+      },
+      {
+        "from": [
+          "BARI",
+          "BARRY"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "BARI"
+      },
+      {
+        "from": [
+          "PHILIPPSBURG",
+          "PHILIPSBURG"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "PHILIPPSBURG"
+      },
+      {
+        "from": [
+          "BENGHAZI",
+          "BINGAZI"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "BENGHAZI"
+      },
+      {
+        "from": [
+          "SANSHUI",
+          "SANSUI"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "SANSHUI"
+      },
+      {
+        "from": [
+          "VALETTA",
+          "VALLETTA"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "VALETTA"
+      },
+      {
+        "from": [
+          "AMMAN",
+          "OMAN"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "AMMAN"
+      },
+      {
+        "from": [
+          "EDE",
+          "ODDE"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "EDE"
+      },
+      {
+        "from": [
+          "SANSHAN",
+          "SHANSHAN"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "SANSHAN"
+      },
+      {
+        "from": [
+          "GWANGJU",
+          "KWANGJU"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "GWANGJU"
+      },
+      {
+        "from": [
+          "BAAR",
+          "BAR"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "BAAR"
+      },
+      {
+        "from": [
+          "SANTA ANA",
+          "SANTANA"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "SANTA ANA"
+      },
+      {
+        "from": [
+          "HAIMEN",
+          "YEMEN"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "HAIMEN"
+      },
+      {
+        "from": [
+          "UM QASR",
+          "UMM QASR"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "UM QASR"
+      },
+      {
+        "from": [
+          "NAAS",
+          "NAHA"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "NAAS"
+      },
+      {
+        "from": [
+          "GWANGYANG",
+          "KWANGYANG"
+        ],
+        "fromBlank": false,
+        "fromError": false,
+        "to": "GWANGYANG"
+      }
+    ],
+    "description": "Mass edit cells in column Foreign_Port_Clustered"
+  },
+  {
+    "op": "core/column-removal",
+    "columnName": "Column",
+    "description": "Remove column Column"
+  }
+]

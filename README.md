@@ -1,6 +1,6 @@
  # Maritime Trade
 
-## Background
+# Background
 The United States has been one of the greatest advocates for free trade since the end of WWII, and the importance of it to the United States economy cannot be underestimated. As many as 40 million jobs in the United States are directly supported by international trade as of 2018 (Trade Partnership LLC), and as much as half of the entire U.S. manufacturing industry or 6.3 million jobs is supported by exports (International Trade Administration, 2018). Imports introduce new goods, and boost the annual earning power of the average American by over $18,000 annually (Hufbauer and Lu, 2017).  
 
 COVID-19 disrupted the global supply chain.  The first effect was a dramatic and rapid reduction in the labor force in affected locations, as workers fell ill or were forced to quarantine (Cambridge University Press, 2020). International trade was impacted further as borders were closed to some commerce and travel (Kerr, 2020). This further exacerbated supply chain disruptions within and among countries, as goods themselves were prioritized differently by those in quarantine.  Most international trade tanked dramatically, especially for manufactured goods and automobiles. However, food and agriculture supply lines were relatively unaffected in the short term, due to narrow time windows between harvest and consumption, and the fact that even during a pandemic, the population still needs to eat (Kerr, 2020) 
@@ -8,11 +8,11 @@ COVID-19 disrupted the global supply chain.  The first effect was a dramatic and
 It is still too early to determine if COVID-19 has permanently disrupted the global supply chain, or if it has just hastened trends already underway, related to the geography of trading partners and the basket of goods traded among them.  These long-term trends will need to be discerned over years, isolating the effect of any prolonged economic recession, especially among countries that are not employing economic stimulus measures. The applied tariff rates of countries is one change that may or may not prove transitory or affected by the virus.  These rates may have a confounding effect with the disruptions caused by the direct or indirect measures of COVID-19.  It is still too early to tell if the pandemic will lead to a more decentralized global economic system, but this is a possible long term scenario (Cambridge University Press, 2020).
 
 ## Proposed questions and solutions to guide our project
-●	How has the composition and/or volume of maritime imports and exports from the US changed over time?  This will be addressed with analytics.
+-	How has the composition and/or volume of maritime imports and exports from the US changed over time?  This will be addressed with analytics.
 
-●	Are there any confounding effects impacting the volume of imports and exports of the targeted commodities?
+-	Are there any confounding effects impacting the volume of imports and exports of the targeted commodities?
 
-●	How did COVID-19 impact the volume and composition of international maritime trade?
+-	How did COVID-19 impact the volume and composition of international maritime trade?
 
 # Data Collection:
 The questions presented in the analysis are complex, interconnected, and require a variety of data sources to answer sufficiently. Data must establish historical import and export volumes and composition . There also must be data that demonstrate COVID-19’s effects on the supply chains and workforce. Finally, data must be included that establishes potential confounding effects on trade volumes, including historical rates for applied tariffs, currency exchange, and unemployment. 
@@ -21,9 +21,9 @@ The questions presented in the analysis are complex, interconnected, and require
 The U.S. Customs and Border Protection collects information about each shipment. Descartes Datamyne, as well as other industry data sources such as IHS Markit’s PIERS and Panjiva, compile this information and enhance it with additional data fields. This project queried data from Descartes Datamyne databases for U.S. imports and exports separately,  from January 1, 2010 through December 31, 2020.  The geographic scope includes all maritime trade shipments through the United States’ ports, to and from all trading partners. The data wss downloaded in a 70 queries of 1 million records or less, separately for  imports and exports, on February 4, 2020.
 
 ### Macroscopic Details	
-●	Imports - The data contains 38,048,999 rows and 17 columns containing date of import arrival, business name and location, product identifying features, port of arrival and departure, source country, and other characteristics relating to the shipment.  
+-	Imports - The data contains 38,048,999 rows and 17 columns containing date of import arrival, business name and location, product identifying features, port of arrival and departure, source country, and other characteristics relating to the shipment.  
 
-●	Exports - The data 9,289,307 rows and 14 columns containing similar data types as the import data.
+-	Exports - The data 9,289,307 rows and 14 columns containing similar data types as the import data.
 
 Datasets will be concatenated into one table. Data consists of all bills of lading (shipment receipts) into or out of a U.S. maritime port from January 1, 2010 through December 31, 2020. Maritime trade is best measured in volumes, such as metric tonnage, TEUs, or total shipments, however the last two are relevant to maritime trade only. Trade in metric tonnage is a major indicator of the economic vitality of the national and global economy.
 
@@ -68,87 +68,124 @@ Within the Data folder, there is a subfolder named “Keys_and_Dictionaries”. 
 The main table, or Fact table, consists of individual trade shipment records. A series of preprocessing steps was required to consolidate the information into one table that could be joined with our other datasets. Datasets were downloaded from a database in batches of 1,000,000 records or less, due to a maximum download constraint established by the Dataymen Descartes system. Import and export records were accessed and downloaded separately from two different system interfaces.In total there were 70 trade datasets, 55 consisting of import records and 15 representing export records. All import files and all export files were concatenated separately in Python. The result was two datasets, one for imports and another for exports. This was completed because attribute names and counts differ between the import and export datasets.
 
 ## Key Assumptions:  
-●	Dropped companies with less than 100 metric tons over the full time span.
+-	Dropped companies with less than 100 metric tons over the full time span.
 
-●	Dropped transactions for metric tonnage, TEUs, and TCVUSD that had over 3.5 standard deviations above the mean.  The range was then further reduced from 0 to 2,054 metric tons, to 0 to 250 metric tons, for the final models.  This further reduction accounted for less than 1% of the remaining records.
-●	Dropped internal ports and airports.
+-	Dropped transactions for metric tonnage, TEUs, and TCVUSD that had over 3.5 standard deviations above the mean.  The range was then further reduced from 0 to 2,054 metric tons, to 0 to 250 metric tons, for the final models.  This further reduction accounted for less than 1% of the remaining records.
 
-●	Countries without tariff and price rates account for <14% of the metric tonnage and <13% of the shipments.  We assume these countries play a peripheral role in U.S. trade trends.
+-	Dropped internal ports and airports.
 
-●	The U.S. unemployment rate accurately reflects the current labor demand.
+-	Countries without tariff and price rates account for <14% of the metric tonnage and <13% of the shipments.  We assume these countries play a peripheral role in U.S. trade trends.
 
-●	Feature engineering was done correctly, with appropriate bins for US_company, foreign_company, and carrier.
+-	The U.S. unemployment rate accurately reflects the current labor demand.
 
-●	COVID-19 cases and deaths from New York Times reporting so the final number of cases and deaths might be different.
+-	Feature engineering was done correctly, with appropriate bins for US_company, foreign_company, and carrier.
 
-●	Data about state mandated closures were utilized from one source at one point in time, primarily around March and April 2020.
+-	COVID-19 cases and deaths from New York Times reporting so the final number of cases and deaths might be different.
 
-●	The effective date of closure of Charleston was used for the state closure of South Carolina due to the port being in Charleston.
+-	Data about state mandated closures were utilized from one source at one point in time, primarily around March and April 2020.
 
-●	Only including 23 HS codes in the entire dataset, which we thought were most relevant.
+-	The effective date of closure of Charleston was used for the state closure of South Carolina due to the port being in Charleston.
 
-●	Used average applied tariff across an entire HS 2 chapter code.  If a country failed to report in a given year, it was assumed the applied tariff rates remained constant from the year before.
+-	Only including 23 HS codes in the entire dataset, which we thought were most relevant.
+
+-	Used average applied tariff across an entire HS 2 chapter code.  If a country failed to report in a given year, it was assumed the applied tariff rates remained constant from the year before.
 
 ## Additional Feature Engineering and Binning: 
 Factor groupings were established for the following variables:
 
-●	US_Company
-        
-●	Foreign_Company
-        
-●	US_Port
-        
-●	Foreign_Port vis-à-vis Foreign_Country
-        
-●	Foreign_Country
-        
-●	HS_Class
-        
-●	Carriers
+-	US_Company
 
-We are using the same thresholds to distinguish companies by the total amount of metric tonnage they trade over the entire time period.
+-	Foreign_Company
 
-All companies that trade less than 100 metric tons are omitted from the dataset. These are not seen as significant players in international trade.  Many of these entries are individuals with shipments at or below 1 metric ton. Our model is primarily focused on companies which regularly have shipments that at least meet our minimum thresholds. After removing records associated with the very small individuals and companies, we can create six factor levels for US_Company and Foreign_Company: 
+-	US_Port
 
-a. micro =  100-1000
+-	Foreign_Port of a Foreign_Country
 
-b. small = 1001-10000
+-	Foreign_Country
 
-c. medium = 10001-100000 
+-	Foreign_Company
 
-d. large = 100001-1000000 
+-	Carriers
 
-e. huge = 1000000+ 
+-	HS_Class
 
-f. unknown = NOT AVAILABLE
+The same thresholds were used to differentiate companies involved in trade by the total amount of metric tonnage over the entire time period.
 
-We are only considering shipments for 23 harmonized service classes.  They are now grouped into the six categories below:
+All companies that trade less than 100 metric tons are omitted from the dataset. These are not seen as significant players in international trade.  Many of these entries are individuals with shipments at or below 1 metric ton. The model is primarily focused on companies which regularly have shipments that at least meet the minimum thresholds. After removing records associated with the very small individuals and companies, we can create six factor levels for US_Company and Foreign_Company: 
 
-●	Edible
+-	micro =  100-1000
 
-●	Edible with Processing
+-	small = 1001-10000
 
-●	Vices
+-	medium = 10001-100000
 
-●	Pharma
+-	large = 100001-1000000
 
-●	Raw Input
+-	huge = 1000000+
 
-●	Finished Goods
+-	unknown = NOT AVAILABLE
+
+Only 23 harmonized service classes of shipments are being considered, which are grouped into the six categories below:
+
+-	Edible
+
+-	Edible with Processing
+
+-	Vices
+
+-	Pharma
+
+-	Raw Input
+
+-	Finished Goods
+
 
 The tariff and exchange rate datasets needed some data manipulation for the country variables. Both of these datasets had entries that included the EU as a whole without breaking down the records by individual country. This causes an issue when trying to account for changes on a national level. In order to solve this issue, the EU records in the  dataset were duplicated 27 times (for each EU country) and a new attribute was created to indicate if the country belonged to the EU for both the tariff and exchange rate datasets. 
 
 The same limitations for the tariff dataset. like the U.K. projections potentially being off, and including Croatia as an EU country as of 2010, while it actually joined in 2013 still apply.  The tariff table was inner merged with the fact table in such a way that only three attributes remained in the tariff table, which were “Average_Tariff”, “Free_Trade_Agreement_with_the_US”, and the new “European_Union” attribute, while having the same number of records. 
 
 # Variable Selection and Transformation for Modeling:
-Outlier testing would likely consist of standard deviation testing (outlier >= 3.5 standard deviations from the mean). Detecting and dropping these outliers will eliminate instances where a company has one abnormally huge shipment in a given year. This should keep the model focused on those company’s typical shipping behavior. Steel and furniture have much higher average weight than the other HS classes included in this dataset and so a higher threshold was selected to avoid eliminating these heavier HS classes. 
+Outliers with observations >= 3.5 standard deviations from the mean was utilized. Detecting and dropping these outliers will eliminate instances where a company has one abnormally huge shipment in a given year. This should keep the model focused on those company’s typical shipping behavior. Steel and furniture have much higher average weight than the other HS classes included in this dataset and so a higher threshold was selected to avoid eliminating these heavier HS classes. 
 
 ## Steps for Variable Selection:
-● Pandas Profiling and Other General Analytics of Dataset
 
-●	Feature importance via testing Random Forest models for the research questions
+-	Variable relevance, missing observations, distribution testing & correlations
 
-● Distribution testing & correlations 
+-	Feature importance via testing Random Forest and XGBoost models for the research questions
 
-●	Principal Component Analysis
+-	Pandas Profiling 
 
+-	Principal Component Analysis
+
+-	Data exploration using `Tableau` and `PowerBI`
+
+# Modelling
+
+
+## Machine Learning
+Given the introduction of COVID-19 in late 2019/early 2020, the components associated with maritime trade imports/exports, with an emphasis on various sets of yearly sets, were used in modeling. ML models used the following libraries:
+- `XGBoost`  
+- `Lightgbm` 
+- `Scikit-learn`: Linear
+
+
+### HPO
+For hyperparameter tuning, `Hyperopt`, and `GridSearchCV` were utilized to determine which components of the model parameters resulted in the lowest error using various regression metrics to predict metric tonnage. Various trial/experiment sizes were completed to determine which parameters when incorporated into the model resulted in the lowest error.
+
+
+### Model Explanations
+`ELI5`, `SHAP` and `LIME` were incorporated to explain the results after hyperparameter tuning the models.
+
+
+## Deep Learning
+`Tensorflow` was used for evaluating the proposed questions:
+- Multilayer perceptron (MLP) regression
+- LSTM
+
+
+### HPO
+For hyperparameter tuning, the `num_layers`, `layer_size` and `learning_rate` were tested using `KerasTuner`.
+
+
+## Time Series
+Univariate GARCH models were evaluated using `rugarch` in `R`. The data was formatted into a time series, aggregrated, assessed if stationary using the Augmented Dickey Fuller (ADF) test, and both the ARMA and GARCH orders were created before the forecast models were fit and subsequent predictions.

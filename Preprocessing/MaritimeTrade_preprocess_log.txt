@@ -1,0 +1,115 @@
+
+Maritime Trade Preprocess into Data Warehouse
+======================================================================
+
+Dimensions of Imports: (38049723, 16)
+======================================================================
+
+Dimensions of Exports: (24377605, 15)
+======================================================================
+
+Dimensions of Concatenated Imports & Exports with all HS_Class: (62279097, 17)
+======================================================================
+
+Number of Unique : HS_Class    23
+dtype: int64
+======================================================================
+
+Number of Unique : US_Company_State    75
+dtype: int64
+======================================================================
+
+Number of Unique of US_Company_Aggregrated is: US_Company_Agg    881140
+dtype: int64
+======================================================================
+
+Number of Unique of Foreign_Company_Country is: Foreign_Company_Country    249
+dtype: int64
+======================================================================
+
+Dimensions of Concatenated Imports & Exports: (40616661, 21)
+======================================================================
+
+Maritime Trade Preprocess into Data Warehouse After Open Refine
+======================================================================
+
+Dimensions of US Company with Metric Tons over 100: (119200, 2)
+======================================================================
+
+Dimensions of Foreign Company with Metric Tons over 100: (123570, 2)
+======================================================================
+
+Dimensions after removing outliers in Metric Tons: (30609579, 34)
+======================================================================
+
+Dimensions after removing data in right tail of Metric Tons: (30037425, 34)
+======================================================================
+
+Dimensions after removing outliers in Teus: (29503729, 34)
+======================================================================
+
+Dimensions after removing outliers in TCVUSD: (29501512, 34)
+======================================================================
+
+Dimensions after merging to a data warehouse: (30460165, 50)
+======================================================================
+
+Number of observations where no trade occurred : (1324, 50)
+======================================================================
+
+Number of unique US states is: State    55
+dtype: int64
+======================================================================
+
+Dimensions of Data Warehouse for EDA: (29595170, 46)
+======================================================================
+
+Missing Data in Warehouse :
+Foreign_Country                          1321
+Foreign_Port                             1321
+US_Port                                  1321
+Container_LCL/FCL                        1321
+Teus                                        0
+Metric_Tons                                 0
+Container_Type_Refrigerated              1321
+Container_Type_Dry                       1321
+TCVUSD                                      0
+Trade_Direction                          1321
+HS_Mixed                                 1321
+HS_Group_Name                            1321
+US_Company_Agg                           1321
+Foreign_Company_Country                  1321
+carrier_size                             1321
+US_Port_Clustered                        1321
+US_Port_Coastal_Region                   1321
+Foreign_Company_Country_Continent        1321
+Foreign_Country_Continent              346098
+Foreign_Country_Region                 120122
+Foreign_Company_Country_Region        8685319
+US_company_size                          1321
+foreign_company_size                     1321
+DateTime                                 1321
+Year                                        2
+DateTime_YearWeek                           2
+DateTime_YearMonth                          2
+US_Unemployment_Rate                        0
+Average_Tariff                        2117532
+Free_Trade_Agreement_with_US             1321
+European_Union                           1321
+Price                                 2329936
+Currency                              2331257
+State                                       2
+Date_Weekly_COVID                    26610550
+cases_weekly                                2
+deaths_weekly                               2
+State_Closure_EA_Diff                    1554
+Time0_StateCase                             0
+cases_state_firstweek                       0
+cases_pctdelta                              0
+Time0_StateDeath                            0
+deaths_state_firstweek                      0
+deaths_pctdelta                             0
+Date_Weekly_Agg                          1321
+Metric_Tons_Weekly                   24861963
+dtype: int64
+======================================================================
