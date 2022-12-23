@@ -164,7 +164,8 @@ Outliers with observations >= 3.5 standard deviations from the mean was utilized
 
 ## Machine Learning
 Given the introduction of COVID-19 in late 2019/early 2020, the components associated with maritime trade imports/exports, with an emphasis on various sets of yearly sets, were used in modeling. ML models used the following libraries:
-- `XGBoost`  
+- `XGBoost`
+- `RAPIDS`: `XGBoost` 
 - `Lightgbm` 
 - `Scikit-learn`: Linear
 

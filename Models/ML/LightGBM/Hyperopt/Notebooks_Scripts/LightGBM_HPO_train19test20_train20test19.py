@@ -415,7 +415,7 @@ X_test1 = ce_ord.fit_transform(X_test1)
 X_test1 = pd.get_dummies(X_test1, drop_first=True)
 
 # MinMax Scaling
-X_test1 = pd.DataFrame(mn.transform(X_test1), columns=X_test1.columns)
+X_test1 = pd.DataFrame(mn.fit_transform(X_test1), columns=X_test1.columns)
 
 # Model Metrics
 y_test_pred = best_bayes_model.predict(X_test1)
@@ -760,7 +760,7 @@ X_test1 = ce_ord.fit_transform(X_test1)
 X_test1 = pd.get_dummies(X_test1, drop_first=True)
 
 # MinMax Scaling
-X_test1 = pd.DataFrame(mn.transform(X_test1), columns=X_test1.columns)
+X_test1 = pd.DataFrame(mn.fit_transform(X_test1), columns=X_test1.columns)
 
 # Model Metrics
 y_test_pred = best_bayes_model.predict(X_test1)
