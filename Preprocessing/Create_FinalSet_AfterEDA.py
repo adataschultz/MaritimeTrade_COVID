@@ -6,7 +6,17 @@
 ######################## Create Final Data Set ################################
 ###############################################################################
 import os
+import random
+import numpy as np
+import warnings
 import pandas as pd
+warnings.filterwarnings('ignore')
+
+seed_value = 42
+os.environ['MaritimeTrade'] = str(seed_value)
+random.seed(seed_value)
+np.random.seed(seed_value)
+
 path = r'D:\MaritimeTrade\Data'
 os.chdir(path)
 
@@ -21,9 +31,8 @@ df = df.drop(['Foreign_Country', 'Foreign_Port', 'US_Port', 'Teus',
               'Foreign_Country_Continent', 'Foreign_Company_Country_Region',
               'Free_Trade_Agreement_with_US', 'European_Union', 'Currency',
               'Price', 'Time0_StateCase', 'cases_state_firstweek', 
-              'Date_Weekly_Agg', 'Time0_StateDeath', 'deaths_state_firstweek',
-              'Metric_Tons_Weekly', 'DateTime_YearMonth'], axis = 1)
-
+              'Time0_StateDeath', 'deaths_state_firstweek',
+              'DateTime_YearMonth'], axis=1)
 df = df.drop_duplicates()
 print(df.shape)
 
